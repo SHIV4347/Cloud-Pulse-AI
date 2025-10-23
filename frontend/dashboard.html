@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CloudPulse AI - Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+
+<body class="dashboard-body">
+
+    <header class="navbar">
+        <div class="logo">
+            <i class="fas fa-cloud fa-lg logo-icon"></i>
+            CloudPulse AI
+        </div>
+        
+        <div class="header-title">Cloud Spending Dashboard</div> 
+        
+        <a href="profile.html" class="user-profile-link">
+            <div class="user-profile">
+                <i class="fas fa-user-circle fa-lg user-icon"></i>
+                User Name
+            </div>
+        </a>
+        
+        <a href="index.html" class="logout-button"><i class="fas fa-sign-out-alt"></i> Logout</a>
+    </header>
+    <main class="dashboard-main">
+        <section class="summary-cards">
+            <div class="card summary-card">
+                <span class="card-title">Actual Cost (YTD)</span>
+                <div class="metric-value">$15,450 <span class="currency">USD</span></div>
+                <div class="metric-change negative">
+                    <i class="fas fa-arrow-up"></i> 5% (vs. last period)
+                </div>
+            </div>
+            <div class="card summary-card">
+                <span class="card-title">Forecasted Cost</span>
+                <div class="metric-value">$12,800 <span class="currency">USD</span></div>
+                <div class="metric-change positive">
+                    <i class="fas fa-arrow-down"></i> 17% (reduction)
+                </div>
+            </div>
+            <div class="card summary-card glowing-green">
+                <span class="card-title">Profit / Savings Potential</span>
+                <div class="metric-value">$2,650 <span class="currency">USD</span></div>
+                <div class="metric-change positive">
+                    <i class="fas fa-chart-line"></i> 17% (Optimization)
+                </div>
+            </div>
+        </section>
+        
+        <hr>
+
+        <section class="charts-section card">
+            <h2>Monthly Cloud Spend Analysis</h2>
+    
+            <canvas id="monthlyChart"></canvas> 
+    
+            <div class="chart-legend">
+                <span class="legend-item red-line-marker">Current Status (Actual Cost)</span>
+                <span class="legend-item green-line-marker">Optimized Prediction (Projected Cost)</span>
+            </div>
+        </section>
+
+        <hr>
+
+        <section class="tables-section">
+            
+            <div class="card anomaly-table">
+                <h3><i class="fas fa-exclamation-triangle"></i> Anomaly Alerts</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Date / Time</th>
+                            <th>Service</th>
+                            <th>Description</th>
+                            <th>Severity</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="high-severity">
+                            <td>2025-10-26 14:30</td>
+                            <td class="service-tag">EC2</td>
+                            <td>Unexpected instance spike</td>
+                            <td><span class="severity high">HIGH</span></td>
+                        </tr>
+                        <tr>
+                            <td>2025-10-26 10:15</td>
+                            <td class="service-tag">RDS</td>
+                            <td>High read usage</td>
+                            <td><span class="severity medium">MEDIUM</span></td>
+                        </tr>
+                        <tr>
+                            <td>2025-10-25 23:00</td>
+                            <td class="service-tag">S3</td>
+                            <td>Unexpected GET requests</td>
+                            <td><span class="severity low">LOW</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="card recommendations-table">
+                <h3><i class="fas fa-lightbulb"></i> Optimization Recommendations</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Recommendation</th>
+                            <th>Service</th>
+                            <th>Estimated Savings</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Resize underutilized DB</td>
+                            <td class="service-tag">RDS</td>
+                            <td><span class="savings-value">$450/month</span></td>
+                        </tr>
+                        <tr>
+                            <td>Purchase Reserved Instances</td>
+                            <td class="service-tag">Compute</td>
+                            <td><span class="savings-value">$12000/year</span></td>
+                        </tr>
+                        <tr>
+                            <td>Enable lifecycle rules</td>
+                            <td class="service-tag">S3</td>
+                            <td><span class="savings-value">$150/month</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+    </main>
+    
+    <footer class="dashboard-footer">
+        &copy; 2025 CloudPulse AI. All rights reserved. | 
+        <a href="#">Privacy</a> | 
+        <a href="#">Terms</a>
+    </footer>
+</body>
+</html>

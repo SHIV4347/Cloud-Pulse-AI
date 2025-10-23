@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CloudPulse AI - User Profile</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <link rel="stylesheet" href="styles.css"> 
+</head>
+<body>
+    
+    <header class="navbar">
+        <div class="logo">
+            <i class="fas fa-cloud fa-lg logo-icon"></i>
+            CloudPulse AI
+        </div>
+        <div class="navbar-controls">
+            <!-- New User Name Button -->
+         
+            <!-- New Logout Button -->
+            <button class="neon-button" onclick="handleLogout()">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </button>
+        </div>
+    </header>
+
+    <div class="profile-container">
+        <!-- Profile Title Centered -->
+        <h1 class="profile-header">
+            <i class="fas fa-user-cog"></i> Account Settings
+        </h1>
+        
+        <div class="profile-layout">
+            <!-- Left Column: User Overview -->
+            <div class="card user-info-card">
+                <i class="fas fa-robot avatar"></i>
+                <h2 class="card-title" id="profileName">Loading User Name...</h2>
+                
+                <div class="profile-detail">
+                    <span class="profile-label">User ID (Firestore UID)</span>
+                    <span class="profile-value user-id-value" id="userIdDisplay">Authenticating...</span>
+                </div>
+
+                <div class="profile-detail">
+                    <span class="profile-label">Email Address</span>
+                    <span class="profile-value" id="profileEmail">loading@cloudpulse.ai</span>
+                </div>
+                
+                <div class="profile-detail">
+                    <span class="profile-label">Role</span>
+                    <span class="profile-value" id="profileRole">System User</span>
+                </div>
+                
+                <div class="profile-detail">
+                    <span class="profile-label">Last Activity</span>
+                    <span class="profile-value" id="profileLastLogin">...</span>
+                </div>
+                
+                <!-- Updated Button to Neon Style -->
+                <button class="neon-button" style="margin-top: 30px; align-self: stretch;">
+                    <i class="fas fa-sync-alt"></i> Update Profile
+                </button>
+            </div>
+            
+            <!-- Right Column: Settings and Billing -->
+            <div>
+                <!-- Preferences Card -->
+                <div class="card" style="margin-bottom: 30px;">
+                    <h2 class="card-title"><i class="fas fa-sliders-h"></i> General Preferences</h2>
+                    
+                    <div class="form-group">
+                        <label for="themeSelect">Dashboard Theme</label>
+                        <select id="themeSelect">
+                            <option value="dark">Dark Mode (Default)</option>
+                            <option value="light">Light Mode</option>
+                            <option value="high_contrast">High Contrast</option>
+                        </select>
+                    </div>
+
+                    <div class="toggle-container">
+                        <span class="toggle-label">Enable Weekly Report Notifications</span>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="notificationToggle" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+
+                    <div class="form-group" style="margin-top: 20px;">
+                        <label for="reportFormatSelect">Default Report Format</label>
+                        <select id="reportFormatSelect">
+                            <option value="pdf">PDF (Portable Document Format)</option>
+                            <option value="csv">CSV (Comma Separated Values)</option>
+                            <option value="json">JSON (JavaScript Object Notation)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Billing Card -->
+                <div class="card">
+                    <h2 class="card-title"><i class="fas fa-credit-card"></i> Billing & Plan</h2>
+                    
+                    <div class="billing-grid">
+                        <div class="billing-item">
+                            <span class="profile-label">Current Plan</span>
+                            <span class="profile-value" id="billingPlan">Loading...</span>
+                        </div>
+                        <div class="billing-item">
+                            <span class="profile-label">Budget Limit</span>
+                            <span class="profile-value" id="billingLimit">$0</span>
+                        </div>
+                        <div class="billing-item">
+                            <span class="profile-label">Plan Renewal</span>
+                            <span class="profile-value" id="billingEnds">Loading...</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Updated Button to Neon Style -->
+                    <button class="neon-button" style="margin-top: 30px; width: 100%; justify-content: center;">
+                        <i class="fas fa-exchange-alt"></i> Manage Subscription
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="profile-footer">
+        &copy; 2025 CloudPulse AI. User Profile Management.
+    </footer>
+
+    <script type="module">
+        // Import Firebase modules
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, setPersistence, browserSessionPersistence } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Enable debug logging for Firestore
+        setLogLevel('Debug');
+
+        // Global variables provided by the Canvas environment
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        let db, auth;
+        let userId = 'unknown';
+
+        // Mock data structure to use as a fallback or initial state
+        const mockProfileData = {
+            name: "Cloud FinOps",
+            email: "finops.user@cloudpulse.ai",
+            role: "System Administrator",
+            lastLogin: new Date().toISOString(),
+            preferences: {
+                theme: "dark",
+                notifications: true,
+                reportFormat: "pdf",
+            },
+            billing: {
+                budgetLimit: 15000,
+                currentPlan: "Pro Enterprise",
+                planEnds: "2026-03-01",
+            }
+        };
+
+        // --- Utility Functions ---
+
+        const formatCurrency = (value) => {
+            return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 }).format(value);
+        };
+        
+        const formatDate = (isoString) => {
+            try {
+                return new Date(isoString).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' });
+            } catch (e) {
+                return 'N/A';
+            }
+        }
+
+        /**
+         * Updates all UI elements with the provided profile data.
+         * @param {Object} data The profile data to display.
+         */
+        function updateProfileUI(data) {
+            // Header button
+            document.getElementById('navUserName').textContent = data.name;
+
+            // Profile Card Details
+            document.getElementById('profileName').textContent = data.name;
+            document.getElementById('profileEmail').textContent = data.email;
+            document.getElementById('profileRole').textContent = data.role;
+            document.getElementById('profileLastLogin').textContent = formatDate(data.lastLogin);
+            
+            // Preferences
+            document.getElementById('themeSelect').value = data.preferences.theme;
+            document.getElementById('notificationToggle').checked = data.preferences.notifications;
+            document.getElementById('reportFormatSelect').value = data.preferences.reportFormat;
+            
+            // Billing
+            document.getElementById('billingPlan').textContent = data.billing.currentPlan;
+            document.getElementById('billingLimit').textContent = formatCurrency(data.billing.budgetLimit);
+            document.getElementById('billingEnds').textContent = data.billing.planEnds; 
+        }
+        
+        /**
+         * Placeholder for logout action
+         */
+        function handleLogout() {
+             console.log("Logout action triggered. In a real app, this would sign out the user.");
+             // In a full application, you would call signOut(auth).
+             // Using alert() is typically avoided in production, but used here for simple demonstration.
+             console.log("Logged out successfully! (Mock Action)");
+        }
+        window.handleLogout = handleLogout; // Make accessible from inline JS
+
+        /**
+         * Sets up the real-time data listener for the user's private profile document.
+         */
+        function loadProfileData() {
+            if (db && userId && userId !== 'unknown') {
+                // Private data path: /artifacts/{appId}/users/{userId}/profile/data/user_profile_doc
+                const profileDocRef = doc(db, 'artifacts', appId, 'users', userId, 'profile', 'data', 'user_profile_doc');
+                
+                onSnapshot(profileDocRef, (docSnap) => {
+                    let data;
+                    if (docSnap.exists()) {
+                        console.log("Real-time profile data received:", docSnap.data());
+                        data = docSnap.data();
+                        // Note: In a real app, you might validate and merge data here
+                    } else {
+                        console.log("No custom profile document found. Using mock data and creating document.");
+                        data = mockProfileData;
+                        // For a real user, you would use setDoc to create the initial document.
+                    }
+                    
+                    updateProfileUI(data);
+
+                }, (error) => {
+                    console.error("Firestore onSnapshot failed:", error);
+                    // Fallback to mock data on error
+                    updateProfileUI(mockProfileData);
+                });
+            } else {
+                console.warn("Firebase not fully ready or User ID missing. Using mock data only.");
+                updateProfileUI(mockProfileData);
+            }
+        }
+
+
+        // --- Initialization Logic ---
+
+        if (Object.keys(firebaseConfig).length > 0) {
+            const app = initializeApp(firebaseConfig);
+            db = getFirestore(app);
+            auth = getAuth(app);
+            
+            // Attempt sign-in using the custom token or anonymously
+            setPersistence(auth, browserSessionPersistence)
+                .then(() => {
+                    if (initialAuthToken) {
+                        return signInWithCustomToken(auth, initialAuthToken);
+                    } else {
+                        return signInAnonymously(auth);
+                    }
+                })
+                .then(() => console.log("Firebase Auth initialized."))
+                .catch((error) => console.error("Firebase sign-in failed:", error));
+
+            // Listen for auth state changes to update UI
+            onAuthStateChanged(auth, (user) => {
+                const userIdDisplayEl = document.getElementById('userIdDisplay');
+                if (user) {
+                    userId = user.uid;
+                    // MANDATORY: Display the complete User ID
+                    userIdDisplayEl.textContent = userId;
+                    loadProfileData(); // Start loading data after auth is ready
+                } else {
+                    // Fallback for non-authenticated states
+                    userId = 'guest-' + Math.random().toString(36).substring(2, 9);
+                    userIdDisplayEl.textContent = userId + ' (Unauthenticated)';
+                    // Update nav name for guest
+                    document.getElementById('navUserName').textContent = 'Guest'; 
+                    loadProfileData(); // Load mock data even for guests
+                }
+            });
+        } else {
+            // Development/No-Firebase case: Load mock data immediately
+            document.getElementById('userIdDisplay').textContent = 'dev-user-000000000000';
+            document.getElementById('navUserName').textContent = mockProfileData.name;
+            console.warn("Firebase configuration is missing. Running with mock user data.");
+            window.addEventListener('load', () => {
+                 updateProfileUI(mockProfileData);
+            });
+        }
+    </script>
+</body>
+</html>
