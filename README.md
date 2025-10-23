@@ -9,4 +9,4 @@ frontend/
  - dashboard.html
  - index.html
  - styles.css
- - index_video.mov --- link : 
+ - index_video.mov --- link : https://drive.google.com/file/d/1sGajNerY7sdPui5ifsJFJnHrw8SncJkR/view?usp=sharing
