@@ -14,6 +14,7 @@ urlpatterns = [
     path("recommendations/", views.recommendations_list, name="recommendations_list"),
     path("profile/", views.profile_page, name="profile"),
     path("login/", views.login_user, name="login"),
+    path("forgot-password/", views.forgot_password, name="forgot_password"),
     path("logout/", views.logout_user, name="logout"),
     path("register/", views.register_user, name="register"),
 ]

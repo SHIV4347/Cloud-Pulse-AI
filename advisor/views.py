@@ -4,12 +4,16 @@ import random
 import pandas as pd
 from pathlib import Path
 from datetime import datetime, timedelta
+from decimal import Decimal, InvalidOperation
 
 from django.shortcuts import render, redirect
 from django.conf import settings
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.password_validation import validate_password
 from django.core.mail import send_mail
+from django.core.exceptions import ValidationError
+from django.core.validators import validate_email
 from django.http import JsonResponse, HttpResponse
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -25,6 +29,93 @@ from .anomaly_detector import detect_hourly_anomalies
 from .recommendations import get_recommendations
 from .models import Profile
 from django.contrib.auth.models import User
+
+
+def clean_text(value):
+    return (value or "").strip()
+
+
+def validate_account_fields(data, current_user=None, require_password=True):
+    errors = {}
+    username = clean_text(data.get("username"))
+    email = clean_text(data.get("email")).lower()
+    first_name = clean_text(data.get("first_name"))
+    last_name = clean_text(data.get("last_name"))
+    phone = clean_text(data.get("phone"))
+    company = clean_text(data.get("company"))
+    role = clean_text(data.get("role"))
+    cloud_provider = clean_text(data.get("cloud_provider"))
+    monthly_budget_raw = clean_text(data.get("monthly_budget"))
+    password = data.get("password") or ""
+    password2 = data.get("password2") or ""
+
+    if not username:
+        errors["username"] = "Username is required."
+    elif len(username) < 3:
+        errors["username"] = "Username must be at least 3 characters."
+    elif "@" in username:
+        errors["username"] = "Username must be different from your email."
+    elif User.objects.filter(username__iexact=username).exclude(pk=getattr(current_user, "pk", None)).exists():
+        errors["username"] = "This username is already taken."
+
+    if not email:
+        errors["email"] = "Email is required."
+    else:
+        try:
+            validate_email(email)
+        except ValidationError:
+            errors["email"] = "Enter a valid email address."
+        if User.objects.filter(email__iexact=email).exclude(pk=getattr(current_user, "pk", None)).exists():
+            errors["email"] = "This email is already registered."
+
+    if username and email and username.lower() == email.lower():
+        errors["username"] = "Username and email must be different."
+
+    if not first_name:
+        errors["first_name"] = "First name is required."
+    if not last_name:
+        errors["last_name"] = "Last name is required."
+    if phone and (len(phone) < 7 or not all(ch.isdigit() or ch in "+- ()" for ch in phone)):
+        errors["phone"] = "Enter a valid phone number."
+    if not company:
+        errors["company"] = "Company is required."
+    if not role:
+        errors["role"] = "Role is required."
+    if cloud_provider not in {"AWS", "Azure", "GCP", "Multi-cloud", "Other"}:
+        errors["cloud_provider"] = "Select a cloud provider."
+
+    monthly_budget = None
+    if monthly_budget_raw:
+        try:
+            monthly_budget = Decimal(monthly_budget_raw)
+            if monthly_budget < 0:
+                errors["monthly_budget"] = "Budget cannot be negative."
+        except InvalidOperation:
+            errors["monthly_budget"] = "Enter a valid budget amount."
+
+    if require_password:
+        if not password:
+            errors["password"] = "Password is required."
+        elif password != password2:
+            errors["password2"] = "Passwords do not match."
+        else:
+            try:
+                validate_password(password, user=current_user)
+            except ValidationError as exc:
+                errors["password"] = " ".join(exc.messages)
+
+    cleaned = {
+        "username": username,
+        "email": email,
+        "first_name": first_name,
+        "last_name": last_name,
+        "phone": phone,
+        "company": company,
+        "role": role,
+        "cloud_provider": cloud_provider,
+        "monthly_budget": monthly_budget,
+    }
+    return cleaned, errors
 
 # helper read/write extra emails (simple file-based fallback removed: use Profile)
 def read_extra_emails(username):
@@ -230,13 +321,53 @@ def recommendations_list(request):
 @login_required
 def profile_page(request):
     user = request.user
+    profile, _ = Profile.objects.get_or_create(user=user)
     if request.method == "POST":
-        extra = request.POST.get("extra_emails", "").strip()
+        cleaned, errors = validate_account_fields(request.POST, current_user=user, require_password=False)
+        extra = clean_text(request.POST.get("extra_emails"))
         emails = [e.strip() for e in extra.split(",") if e.strip()]
-        write_extra_emails(user.username, emails)
+        for email in emails:
+            try:
+                validate_email(email)
+            except ValidationError:
+                errors["extra_emails"] = "Enter valid comma-separated notification emails."
+                break
+
+        if errors:
+            return render(request, "advisor/profile.html", {
+                "errors": errors,
+                "form": request.POST,
+                "extras": emails,
+            })
+
+        user.username = cleaned["username"]
+        user.email = cleaned["email"]
+        user.first_name = cleaned["first_name"]
+        user.last_name = cleaned["last_name"]
+        user.save()
+
+        profile.phone = cleaned["phone"]
+        profile.company = cleaned["company"]
+        profile.role = cleaned["role"]
+        profile.cloud_provider = cleaned["cloud_provider"]
+        profile.monthly_budget = cleaned["monthly_budget"]
+        profile.extra_emails = ",".join(emails)
+        profile.save()
         return redirect("advisor:profile")
     extras = read_extra_emails(user.username)
-    return render(request, "advisor/profile.html", {"extras": extras})
+    form = {
+        "username": user.username,
+        "email": user.email,
+        "first_name": user.first_name,
+        "last_name": user.last_name,
+        "phone": profile.phone,
+        "company": profile.company,
+        "role": profile.role,
+        "cloud_provider": profile.cloud_provider,
+        "monthly_budget": profile.monthly_budget if profile.monthly_budget is not None else "",
+        "extra_emails": ", ".join(extras),
+    }
+    return render(request, "advisor/profile.html", {"extras": extras, "form": form})
 
 
 def index(request):
@@ -246,14 +377,31 @@ def index(request):
 
 def login_user(request):
     if request.method == "POST":
-        uname = request.POST.get("username")
-        pwd = request.POST.get("password")
-        u = authenticate(request, username=uname, password=pwd)
+        email = clean_text(request.POST.get("email")).lower()
+        pwd = request.POST.get("password") or ""
+        errors = {}
+        if not email:
+            errors["email"] = "Email is required."
+        else:
+            try:
+                validate_email(email)
+            except ValidationError:
+                errors["email"] = "Enter a valid email address."
+        if not pwd:
+            errors["password"] = "Password is required."
+        if errors:
+            return render(request, "advisor/login.html", {"errors": errors, "form": request.POST})
+
+        user_obj = User.objects.filter(email__iexact=email).first()
+        u = authenticate(request, username=user_obj.username, password=pwd) if user_obj else None
         if u:
             login(request, u)
             return redirect("advisor:dashboard")
         else:
-            return render(request, "advisor/login.html", {"error": "Invalid credentials"})
+            return render(request, "advisor/login.html", {
+                "error": "Invalid email or password.",
+                "form": request.POST,
+            })
     return render(request, "advisor/login.html")
 
 
@@ -264,18 +412,70 @@ def logout_user(request):
 
 def register_user(request):
     if request.method == "POST":
-        username = request.POST.get("username") or ""
-        email = request.POST.get("email") or ""
-        password = request.POST.get("password") or ""
-        password2 = request.POST.get("password2") or ""
-        if not username:
-            return render(request, "advisor/register.html", {"error": "Username required"})
-        if password != password2:
-            return render(request, "advisor/register.html", {"error": "Passwords do not match"})
-        if User.objects.filter(username=username).exists():
-            return render(request, "advisor/register.html", {"error": "Username exists"})
-        u = User.objects.create_user(username=username, email=email, password=password)
-        # profile will be created by signal
+        cleaned, errors = validate_account_fields(request.POST, require_password=True)
+        if errors:
+            return render(request, "advisor/register.html", {"errors": errors, "form": request.POST})
+
+        u = User.objects.create_user(
+            username=cleaned["username"],
+            email=cleaned["email"],
+            password=request.POST.get("password"),
+            first_name=cleaned["first_name"],
+            last_name=cleaned["last_name"],
+        )
+        profile, _ = Profile.objects.get_or_create(user=u)
+        profile.phone = cleaned["phone"]
+        profile.company = cleaned["company"]
+        profile.role = cleaned["role"]
+        profile.cloud_provider = cleaned["cloud_provider"]
+        profile.monthly_budget = cleaned["monthly_budget"]
+        profile.save()
         login(request, u)
         return redirect("advisor:dashboard")
     return render(request, "advisor/register.html")
+
+
+def forgot_password(request):
+    if request.method == "POST":
+        email = clean_text(request.POST.get("email")).lower()
+        username = clean_text(request.POST.get("username"))
+        password = request.POST.get("password") or ""
+        password2 = request.POST.get("password2") or ""
+        errors = {}
+
+        if not email:
+            errors["email"] = "Email is required."
+        else:
+            try:
+                validate_email(email)
+            except ValidationError:
+                errors["email"] = "Enter a valid email address."
+        if not username:
+            errors["username"] = "Username is required."
+        if not password:
+            errors["password"] = "New password is required."
+        elif password != password2:
+            errors["password2"] = "Passwords do not match."
+
+        user = None
+        if not errors:
+            user = User.objects.filter(email__iexact=email, username__iexact=username).first()
+            if not user:
+                errors["email"] = "No account matched that email and username."
+            else:
+                try:
+                    validate_password(password, user=user)
+                except ValidationError as exc:
+                    errors["password"] = " ".join(exc.messages)
+
+        if errors:
+            return render(request, "advisor/forgot_password.html", {"errors": errors, "form": request.POST})
+
+        user.set_password(password)
+        user.save()
+        return render(request, "advisor/forgot_password.html", {
+            "success": "Password updated. You can login with your new password.",
+            "form": {"email": email, "username": username},
+        })
+
+    return render(request, "advisor/forgot_password.html")

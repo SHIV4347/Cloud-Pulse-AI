@@ -1,43 +1,126 @@
 {% load static %}
 <!doctype html>
-<html>
+<html lang="en">
+
 <head>
   <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Anomalies - CloudPulse AI</title>
-  <link rel="stylesheet" href="{% static 'advisor/css/styles.css' %}">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <link rel="stylesheet" href="{% static 'advisor/css/styles.css' %}?v=finops-ui-4">
 </head>
-<body>
-  <header class="navbar">
-    <div class="logo">CloudPulse AI</div>
-    <div class="header-title">Anomalies</div>
-    <div class="navbar-controls">
-      <a href="{% url 'advisor:dashboard' %}" class="nav-user-button">Dashboard</a>
-      <a href="{% url 'advisor:profile' %}" class="neon-button">Profile</a>
-    </div>
-  </header>
 
-  <main class="dashboard-main">
-    <section class="card">
-      <h2 style="display:flex; justify-content:space-between; align-items:center;">
-        <span><i class="fas fa-exclamation-triangle"></i> All Anomalies</span>
-        <span style="font-size:0.9rem; color:#bfc7cf;">Total: {{ anomalies|length }}</span>
-      </h2>
-      <table>
-        <thead><tr><th>Time</th><th>Service</th><th>Description</th><th>Severity</th></tr></thead>
-        <tbody>
-          {% for a in anomalies %}
-            <tr class="{% if a.severity == 'HIGH' %}high-severity{% endif %}">
-              <td>{{ a.timestamp }}</td>
-              <td class="service-tag">{{ a.service }}</td>
-              <td class="description">{{ a.description }}</td>
-              <td><span class="severity {{ a.severity|lower }}">{{ a.severity }}</span></td>
-            </tr>
-          {% empty %}
-            <tr><td colspan="4">No anomalies</td></tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </section>
-  </main>
+<body class="app-body">
+  <canvas id="neural-bg" class="neural-bg" aria-hidden="true"></canvas>
+
+  <div class="app-layout">
+    <aside class="sidebar" aria-label="CloudPulse navigation">
+      <a href="{% url 'advisor:dashboard' %}" class="logo">
+        <span class="logo-icon"><i class="fa-solid fa-bolt"></i></span>
+        <span>CloudPulse AI</span>
+      </a>
+
+      <nav class="sidebar-nav" aria-label="Dashboard navigation">
+        <a href="{% url 'advisor:dashboard' %}"><i class="fa-solid fa-gauge-high"></i> Dashboard</a>
+        <a href="{% url 'advisor:anomalies_list' %}" class="active"><i class="fa-solid fa-triangle-exclamation"></i>
+          Anomalies</a>
+        <a href="{% url 'advisor:recommendations_list' %}"><i class="fa-solid fa-leaf"></i> Recommendations</a>
+        <a href="{% url 'advisor:profile' %}"><i class="fa-solid fa-user-gear"></i> Profile</a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="user-mini">
+          <i class="fa-solid fa-circle-user"></i>
+          <div>
+            <strong>{{ request.user.username }}</strong>
+            <span>{{ request.user.email|default:"FinOps operator" }}</span>
+          </div>
+        </div>
+        <a href="{% url 'advisor:logout' %}" class="nav-user-button"><i
+            class="fa-solid fa-arrow-right-from-bracket"></i> Logout</a>
+      </div>
+    </aside>
+
+    <main class="app-main">
+      <section class="page-header">
+        <div style="display: flex; align-items: center; gap: 20px;">
+          <button id="sidebar-toggle" class="neon-button" aria-label="Toggle Sidebar" style="padding: 10px 14px;">
+            <i class="fa-solid fa-bars"></i>
+          </button>
+          <div>
+            <h1>Anomalies</h1>
+          </div>
+        </div>
+        <span class="neon-button">{{ anomalies|length }} items</span>
+      </section>
+
+      <section class="tile-grid" aria-label="Anomaly highlights">
+        {% for a in anomalies|slice:":3" %}
+        <article class="tile anomaly {% if a.severity == 'HIGH' %}high{% endif %}">
+          <div class="tile-kicker">
+            <span class="service-tag">{{ a.service }}</span>
+            <span class="severity {{ a.severity|lower }}">{{ a.severity }}</span>
+          </div>
+          <h3>{{ a.timestamp }}</h3>
+          <p>{{ a.description }}</p>
+        </article>
+        {% empty %}
+        <article class="tile">
+          <h3>No anomalies</h3>
+          <p>Latest telemetry is clean.</p>
+        </article>
+        {% endfor %}
+      </section>
+
+      <section class="data-panel">
+        <div class="panel-header">
+          <h2><i class="fa-solid fa-list-check"></i> Anomaly ledger</h2>
+        </div>
+        <div class="table-shell">
+          <table>
+            <thead>
+              <tr>
+                <th>Time</th>
+                <th>Service</th>
+                <th>Description</th>
+                <th>Severity</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for a in anomalies %}
+              <tr class="{% if a.severity == 'HIGH' %}high-severity{% endif %}">
+                <td>{{ a.timestamp }}</td>
+                <td><span class="service-tag">{{ a.service }}</span></td>
+                <td class="description">{{ a.description }}</td>
+                <td><span class="severity {{ a.severity|lower }}">{{ a.severity }}</span></td>
+              </tr>
+              {% empty %}
+              <tr>
+                <td colspan="4" class="empty-state">No anomalies</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="{% static 'advisor/js/neural-bg.js' %}?v=finops-ui-4"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const toggleBtn = document.getElementById("sidebar-toggle");
+      if (toggleBtn) {
+        toggleBtn.addEventListener("click", () => {
+          document.querySelector(".app-layout").classList.toggle("sidebar-hidden");
+        });
+      }
+    });
+  </script>
 </body>
+
 </html>

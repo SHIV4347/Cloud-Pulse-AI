@@ -1,283 +1,416 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta charset="utf-8" />
-    <title>CloudPulse AI - Dashboard</title>
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{% static 'advisor/css/styles.css' %}">
-
-
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    <style>
-      /* small local safety adjustments (keeps layout stable) */
-      .top-controls { display:flex; gap:12px; align-items:center; margin:18px 0; }
-      .summary-cards { gap:18px; margin-bottom:8px; }
-      .service-tag { max-width:110px; display:inline-block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-      .table-desc { white-space:normal; }
-      .chart-legend { justify-content: flex-start; gap:16px; }
-      .live-dot { margin-left:auto; color:#00ff88; font-weight:700; }
-    </style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CloudPulse AI - Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <link rel="stylesheet" href="{% static 'advisor/css/styles.css' %}?v=finops-ui-4">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 </head>
+
 <body class="dashboard-body">
-    <header class="navbar">
-        <div class="logo">
-            <i class="fas fa-cloud logo-icon"></i>
-            CloudPulse AI
+  <canvas id="neural-bg" class="neural-bg" aria-hidden="true"></canvas>
+
+  <div class="app-layout">
+    <aside class="sidebar" aria-label="CloudPulse navigation">
+      <a href="{% url 'advisor:dashboard' %}" class="logo">
+        <span class="logo-icon"><i class="fa-solid fa-bolt"></i></span>
+        <span>CloudPulse AI</span>
+      </a>
+
+      <nav class="sidebar-nav" aria-label="Dashboard navigation">
+        <a href="{% url 'advisor:dashboard' %}" class="active"><i class="fa-solid fa-gauge-high"></i> Dashboard</a>
+        <a href="{% url 'advisor:anomalies_list' %}"><i class="fa-solid fa-triangle-exclamation"></i> Anomalies</a>
+        <a href="{% url 'advisor:recommendations_list' %}"><i class="fa-solid fa-leaf"></i> Recommendations</a>
+        <a href="{% url 'advisor:profile' %}"><i class="fa-solid fa-user-gear"></i> Profile</a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="user-mini">
+          <i class="fa-solid fa-circle-user"></i>
+          <div>
+            <strong>{{ request.user.username }}</strong>
+            <span>{{ request.user.email|default:"FinOps operator" }}</span>
+          </div>
         </div>
-
-        <div class="header-title">Cloud Spending Dashboard</div>
-
-        <a href="{% url 'advisor:profile' %}" class="user-profile-link">
-            <div class="user-profile nav-user-button">
-                <i class="fas fa-user-circle"></i>
-                {{ request.user.get_full_name|default:request.user.username }}
-            </div>
+        <a href="{% url 'advisor:logout' %}" class="nav-user-button">
+          <i class="fa-solid fa-arrow-right-from-bracket"></i>
+          Logout
         </a>
-
-        <a href="{% url 'advisor:logout' %}" class="logout-button nav-user-button">
-            <i class="fas fa-sign-out-alt"></i> Logout
-        </a>
-    </header>
+      </div>
+    </aside>
 
     <main class="dashboard-main">
-        <!-- SUMMARY CARDS -->
-        <section class="summary-cards">
-            <div class="card summary-card">
-                <div class="card-title">Actual Cost (Last 30 days)</div>
-                <div class="metric-value">${{ summary.total_cost|default:"0.00" }}</div>
-                <div class="metric-change negative">
-                    <i class="fas fa-arrow-up"></i>
-                    {{ summary.change_percentage|default:"0.0" }}% (vs. previous)
-                </div>
-            </div>
-
-            <div class="card summary-card">
-                <div class="card-title">Forecasted Cost (Next 30 days)</div>
-                <div class="metric-value">${{ summary.predicted_next_month|default:"0.00" }}</div>
-                <div class="metric-change positive">
-                    <i class="fas fa-chart-line"></i> Model Prediction
-                </div>
-            </div>
-
-            <div class="card summary-card glowing-green">
-                <div class="card-title">Savings Potential</div>
-                <div class="metric-value">${{ summary.savings|default:"0.00" }}</div>
-                <div class="metric-change positive">
-                    <i class="fas fa-piggy-bank"></i> Optimized Estimate
-                </div>
-            </div>
-        </section>
-
-        <hr>
-
-        <!-- Controls -->
-        <div class="top-controls">
-            <button id="btn-trigger" class="btn-red">Trigger Anomaly</button>
-            <button id="btn-solve" class="btn-green">Solve Anomaly</button>
-
-            <div class="live-dot">● LIVE</div>
+      <header class="topbar">
+        <div style="display: flex; align-items: center; gap: 20px;">
+          <button id="sidebar-toggle" class="neon-button" aria-label="Toggle Sidebar" style="padding: 10px 14px;">
+            <i class="fa-solid fa-bars"></i>
+          </button>
+          <div>
+            <!-- <span class="eyebrow"><i class="fa-solid fa-satellite-dish"></i> Live Monitoring</span> -->
+            <h1>FinOps Dashboard</h1>
+            <p>Cloud cost, forecast, anomalies, and savings in one operational view.</p>
+          </div>
         </div>
+        <div class="topbar-actions">
+          <button id="btn-trigger" class="btn-red" type="button"><i class="fa-solid fa-bolt"></i> Trigger</button>
+          <button id="btn-solve" class="btn-green" type="button"><i class="fa-solid fa-check"></i> Resolve</button>
+          <span class="live-dot">Live</span>
+        </div>
+      </header>
 
-        <hr>
+      <section class="summary-cards" aria-label="Cloud cost summary">
+        <article class="stat-card alert" id="stat-actual">
+          <div class="card-title">Actual cost - last 30 days</div>
+          <div class="metric-row">
+            <div class="metric-value" id="actual-cost">${{ summary.total_cost|default:"0.00" }}</div>
+            <span class="metric-icon"><i class="fa-solid fa-fire-flame-curved"></i></span>
+          </div>
+          <div class="metric-change negative">
+            <i class="fa-solid fa-arrow-trend-up"></i>
+            {{ summary.change_percentage|default:"0.0" }}% vs previous
+          </div>
+          <div class="progress-track" aria-hidden="true">
+            <div class="progress-bar" style="--progress: 76%"></div>
+          </div>
+        </article>
 
-        <!-- CHART -->
-        <section class="charts-section card">
-            <h2>Hourly Cloud Spend (Live simulation)</h2>
+        <article class="stat-card" id="stat-forecast">
+          <div class="card-title">Forecasted cost - next 30 days</div>
+          <div class="metric-row">
+            <div class="metric-value" id="forecast-cost">${{ summary.predicted_next_month|default:"0.00" }}</div>
+            <span class="metric-icon"><i class="fa-solid fa-chart-line"></i></span>
+          </div>
+          <div class="metric-change"><i class="fa-solid fa-brain"></i> Model prediction</div>
+          <div class="progress-track" aria-hidden="true">
+            <div class="progress-bar" style="--progress: 58%"></div>
+          </div>
+        </article>
+
+        <article class="stat-card success" id="stat-savings">
+          <div class="card-title">Savings potential</div>
+          <div class="metric-row">
+            <div class="metric-value" id="savings-cost">${{ summary.savings|default:"0.00" }}</div>
+            <span class="metric-icon"><i class="fa-solid fa-piggy-bank"></i></span>
+          </div>
+          <div class="metric-change positive"><i class="fa-solid fa-leaf"></i> Optimized estimate</div>
+          <div class="progress-track" aria-hidden="true">
+            <div class="progress-bar" style="--progress: 64%"></div>
+          </div>
+        </article>
+      </section>
+
+      <section class="dashboard-grid-full">
+        <article class="data-panel charts-section">
+          <div class="panel-header">
+            <div>
+              <span class="card-title">Hourly simulation</span>
+              <h2>Cloud spend telemetry</h2>
+            </div>
+            <span class="eyebrow"><i class="fa-solid fa-wave-square"></i> Chart.js</span>
+          </div>
+          <div class="chart-wrap">
             <canvas id="hourlyChart"></canvas>
+          </div>
+          <div class="chart-legend">
+            <span class="legend-item"><span class="legend-swatch"></span>Actual spend</span>
+            <span class="legend-item"><span class="legend-swatch prediction"></span>Predicted spend</span>
+          </div>
+        </article>
+      </section>
 
-            <div class="chart-legend">
-                <div class="legend-item"><span style="display:inline-block;width:14px;height:8px;background:#ff6b4d;margin-right:8px;border-radius:2px;"></span> Actual (red)</div>
-                <div class="legend-item"><span style="display:inline-block;width:14px;height:8px;border:2px dashed #00ff88;margin-right:8px;border-radius:2px;"></span> Prediction (green)</div>
-            </div>
+      <section class="bottom-split-grid" style="margin-top: 16px;">
+        <section class="data-panel anomaly-table" aria-labelledby="anomaly-title">
+          <div class="panel-header">
+            <h3 id="anomaly-title"><i class="fa-solid fa-triangle-exclamation"></i> Anomaly alerts</h3>
+            <a href="{% url 'advisor:anomalies_list' %}" class="panel-link">View all</a>
+          </div>
+          <div class="tile-list" id="anomaly-rows">
+            {% for a in top_anomalies %}
+            <article class="mini-tile {% if a.severity == 'HIGH' %}high{% endif %}">
+              <div class="tile-meta">
+                <span>{{ a.timestamp }}</span>
+                <span class="severity {{ a.severity|lower }}">{{ a.severity }}</span>
+              </div>
+              <strong class="service-tag">{{ a.service }}</strong>
+              <p class="tile-title">{{ a.description }}</p>
+            </article>
+            {% empty %}
+            <p class="empty-state">No recent anomalies.</p>
+            {% endfor %}
+          </div>
         </section>
 
-        <hr>
-
-        <!-- ALERTS + RECOMMENDATIONS -->
-        <section class="tables-section">
-            <div class="card anomaly-table">
-                <h3><i class="fas fa-exclamation-triangle"></i> Anomaly Alerts
-                    <a href="{% url 'advisor:anomalies_list' %}" style="float:right; font-size:0.95rem; color:var(--accent-blue)">View All →</a>
-                </h3>
-                <table>
-                    <thead>
-                        <tr><th>Date / Time</th><th>Service</th><th class="table-desc">Description</th><th>Severity</th></tr>
-                    </thead>
-                    <tbody id="anomaly-rows">
-                        {% for a in top_anomalies %}
-                        <tr class="{% if a.severity == 'HIGH' %}high-severity{% endif %}">
-                            <td>{{ a.timestamp }}</td>
-                            <td><span class="service-tag">{{ a.service }}</span></td>
-                            <td class="table-desc">{{ a.description }}</td>
-                            <td><span class="severity {{ a.severity|lower }}">{{ a.severity }}</span></td>
-                        </tr>
-                        {% empty %}
-                        <tr><td colspan="4">No recent anomalies.</td></tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-
-            <div class="card recommendations-table">
-                <h3><i class="fas fa-lightbulb"></i> Optimization Recommendations
-                    <a href="{% url 'advisor:recommendations_list' %}" style="float:right; font-size:0.95rem; color:var(--accent-blue)">View All →</a>
-                </h3>
-                <table>
-                    <thead><tr><th>Recommendation</th><th>Service</th><th>Estimated Savings</th></tr></thead>
-                    <tbody id="rec-rows">
-                        {% for r in top_recs %}
-                        <tr>
-                            <td>{{ r.title|default:r.title }}</td>
-                            <td><span class="service-tag">{{ r.service }}</span></td>
-                            <td><span class="savings-value">${{ r.savings_value }}</span></td>
-                        </tr>
-                        {% empty %}
-                        <tr><td colspan="3">No recommendations.</td></tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
+        <section class="data-panel recommendations-table" aria-labelledby="recommendation-title">
+          <div class="panel-header">
+            <h3 id="recommendation-title"><i class="fa-solid fa-lightbulb"></i> Savings queue</h3>
+            <a href="{% url 'advisor:recommendations_list' %}" class="panel-link">View all</a>
+          </div>
+          <div class="tile-list" id="rec-rows">
+            {% for r in top_recs %}
+            <article class="mini-tile">
+              <div class="tile-meta">
+                <span class="service-tag">{{ r.service }}</span>
+                <span class="savings-value">${{ r.savings_value }}</span>
+              </div>
+              <p class="tile-title">{{ r.title|default:r.title }}</p>
+            </article>
+            {% empty %}
+            <p class="empty-state">No recommendations.</p>
+            {% endfor %}
+          </div>
         </section>
+      </section>
 
-        <footer class="dashboard-footer">
-            &copy; 2025 CloudPulse AI. All rights reserved. |
-            <a href="#">Privacy</a> |
-            <a href="#">Terms</a>
-        </footer>
+      <footer class="dashboard-footer">
+        &copy; 2026 CloudPulse AI. Privacy and terms apply.
+      </footer>
     </main>
+  </div>
 
-<!-- place near bottom of dashboard.html, just before </body> -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-const hourlyData = {{ hourly_chart_json|safe }}; // initial (from context)
-let chart; // will initialize Chart.js
+  <script src="{% static 'advisor/js/neural-bg.js' %}?v=finops-ui-4"></script>
+  <script>
+    const initialPoints = {{ hourly_chart_json| safe }};
+    let chart;
 
-document.getElementById("btn-trigger").addEventListener("click", () => {
-    fetch("{% url 'advisor:force_anomaly' %}");
-});
+    function formatMoney(value) {
+      const number = Number(value || 0);
+      return `$${number.toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
+    }
 
-document.getElementById("btn-solve").addEventListener("click", () => {
-    fetch("{% url 'advisor:solve_anomaly' %}");
-});
+    function setText(id, value) {
+      const node = document.getElementById(id);
+      if (node) node.textContent = value;
+    }
 
+    function makeTile(className) {
+      const tile = document.createElement("article");
+      tile.className = className;
+      return tile;
+    }
 
-function initChart(initialPoints, futurePoints) {
-    const ctx = document.getElementById('hourlyChart').getContext('2d');
-    const labels = initialPoints.map(p => p.timestamp);
-    const costs = initialPoints.map(p => p.cost);
+    function renderAnomalies(items) {
+      const container = document.getElementById("anomaly-rows");
+      if (!container) return;
+      container.textContent = "";
 
-    const futureLabels = futurePoints ? futurePoints.map(p => p.timestamp) : [];
-    const futureVals = futurePoints ? futurePoints.map(p => p.predicted) : [];
+      if (!items || items.length === 0) {
+        const empty = document.createElement("p");
+        empty.className = "empty-state";
+        empty.textContent = "No recent anomalies.";
+        container.appendChild(empty);
+        return;
+      }
 
-    chart = new Chart(ctx, {
-        type: 'line',
+      items.forEach((item) => {
+        const severity = String(item.severity || "LOW").toLowerCase();
+        const tile = makeTile(`mini-tile ${severity === "high" ? "high" : ""}`);
+
+        const meta = document.createElement("div");
+        meta.className = "tile-meta";
+        const time = document.createElement("span");
+        time.textContent = item.timestamp || "";
+        const badge = document.createElement("span");
+        badge.className = `severity ${severity}`;
+        badge.textContent = item.severity || "LOW";
+        meta.append(time, badge);
+
+        const service = document.createElement("strong");
+        service.className = "service-tag";
+        service.textContent = item.service || "Unknown";
+
+        const title = document.createElement("p");
+        title.className = "tile-title";
+        title.textContent = item.description || "Anomaly detected.";
+
+        tile.append(meta, service, title);
+        container.appendChild(tile);
+      });
+    }
+
+    function renderRecommendations(items) {
+      const container = document.getElementById("rec-rows");
+      if (!container) return;
+      container.textContent = "";
+
+      if (!items || items.length === 0) {
+        const empty = document.createElement("p");
+        empty.className = "empty-state";
+        empty.textContent = "No recommendations.";
+        container.appendChild(empty);
+        return;
+      }
+
+      items.forEach((item) => {
+        const tile = makeTile("mini-tile");
+        const meta = document.createElement("div");
+        meta.className = "tile-meta";
+
+        const service = document.createElement("span");
+        service.className = "service-tag";
+        service.textContent = item.service || "Cloud";
+
+        const savings = document.createElement("span");
+        savings.className = "savings-value";
+        savings.textContent = item.savings_text || formatMoney(item.savings_value);
+
+        const title = document.createElement("p");
+        title.className = "tile-title";
+        title.textContent = item.title || "Optimization recommendation";
+
+        meta.append(service, savings);
+        tile.append(meta, title);
+        container.appendChild(tile);
+      });
+    }
+
+    function initChart(points, futurePoints) {
+      const canvas = document.getElementById("hourlyChart");
+      const ctx = canvas.getContext("2d");
+      const gradient = ctx.createLinearGradient(0, 0, 0, 360);
+      gradient.addColorStop(0, "rgba(0, 242, 254, 0.28)");
+      gradient.addColorStop(1, "rgba(0, 242, 254, 0.01)");
+
+      const predictionGradient = ctx.createLinearGradient(0, 0, 0, 360);
+      predictionGradient.addColorStop(0, "rgba(57, 255, 20, 0.18)");
+      predictionGradient.addColorStop(1, "rgba(57, 255, 20, 0)");
+
+      const labels = points.map((point) => point.timestamp);
+      const costs = points.map((point) => point.cost);
+      const future = futurePoints || [];
+      const futureLabels = future.map((point) => point.timestamp);
+      const futureVals = future.map((point) => point.predicted);
+
+      chart = new Chart(ctx, {
+        type: "line",
         data: {
-            labels: labels.concat(futureLabels),
-            datasets: [
-                {
-                    label: 'Actual (red)',
-                    data: costs.concat(new Array(futureLabels.length).fill(null)),
-                    borderColor: '#ff6b5f',
-                    backgroundColor: 'rgba(255,107,95,0.08)',
-                    tension: 0.25,
-                    pointRadius: 3,
-                    borderWidth: 2,
-                },
-                {
-                    label: 'Prediction (green)',
-                    data: new Array(labels.length).fill(null).concat(futureVals),
-                    borderColor: '#00ff88',
-                    borderDash: [6,4],
-                    pointRadius: 3,
-                    borderWidth: 2,
-                }
-            ]
+          labels: labels.concat(futureLabels),
+          datasets: [
+            {
+              label: "Actual spend",
+              data: costs.concat(new Array(futureLabels.length).fill(null)),
+              borderColor: "#00F2FE",
+              backgroundColor: gradient,
+              fill: true,
+              tension: 0.38,
+              pointRadius: 2.8,
+              pointHoverRadius: 6,
+              pointBackgroundColor: "#090D16",
+              pointBorderColor: "#00F2FE",
+              pointBorderWidth: 2,
+              borderWidth: 2.5
+            },
+            {
+              label: "Predicted spend",
+              data: new Array(labels.length).fill(null).concat(futureVals),
+              borderColor: "#39FF14",
+              backgroundColor: predictionGradient,
+              borderDash: [8, 5],
+              fill: true,
+              tension: 0.34,
+              pointRadius: 2.8,
+              pointHoverRadius: 6,
+              pointBackgroundColor: "#090D16",
+              pointBorderColor: "#39FF14",
+              pointBorderWidth: 2,
+              borderWidth: 2.5
+            }
+          ]
         },
         options: {
-            interaction: { intersect: false },
-            plugins: { legend: { position: 'top' } },
-            scales: {
-                x: { display: true, ticks: { maxRotation: 45, minRotation: 30 } },
-                y: { beginAtZero: true }
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: { intersect: false, mode: "index" },
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              backgroundColor: "rgba(9, 13, 22, 0.92)",
+              borderColor: "rgba(0, 242, 254, 0.35)",
+              borderWidth: 1,
+              titleColor: "#F7FBFF",
+              bodyColor: "#D8E2F3",
+              padding: 12,
+              displayColors: false
             }
+          },
+          scales: {
+            x: {
+              grid: { color: "rgba(255, 255, 255, 0.045)" },
+              ticks: { color: "#9BA9C4", maxRotation: 0, autoSkip: true, maxTicksLimit: 8 }
+            },
+            y: {
+              beginAtZero: true,
+              grid: { color: "rgba(0, 242, 254, 0.08)" },
+              ticks: {
+                color: "#9BA9C4",
+                callback: (value) => `$${value}`
+              }
+            }
+          }
         }
+      });
+    }
+
+    function updateFromServer(data) {
+      const labels = data.hourly.map((point) => point.timestamp);
+      const costs = data.hourly.map((point) => point.cost);
+      const future = data.future || [];
+      const futureLabels = future.map((point) => point.timestamp);
+      const futureVals = future.map((point) => point.predicted);
+
+      chart.data.labels = labels.concat(futureLabels);
+      chart.data.datasets[0].data = costs.concat(new Array(futureLabels.length).fill(null));
+      chart.data.datasets[1].data = new Array(labels.length).fill(null).concat(futureVals);
+      chart.update("none");
+
+      renderAnomalies(data.top_anomalies);
+      renderRecommendations(data.top_recs);
+
+      if (data.summary) {
+        setText("actual-cost", formatMoney(data.summary.total_cost));
+        setText("forecast-cost", formatMoney(data.summary.predicted_next_month));
+        setText("savings-cost", formatMoney(data.summary.savings));
+      }
+
+      if (data.new_anomalies && data.new_anomalies.length > 0) {
+        document.querySelectorAll(".anomaly-table, #stat-actual").forEach((node) => {
+          node.classList.add("data-active");
+          window.setTimeout(() => node.classList.remove("data-active"), 1000);
+        });
+      }
+    }
+
+    function pollServer(forceAnomaly) {
+      const url = `{% url 'advisor:live_update' %}` + (forceAnomaly ? "?force=1" : "");
+      fetch(url, { credentials: "same-origin" })
+        .then((response) => response.json())
+        .then(updateFromServer)
+        .catch((error) => console.log("poll error", error));
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      initChart(initialPoints, []);
+      window.setInterval(() => pollServer(false), 5000);
+
+      document.getElementById("btn-trigger").addEventListener("click", () => pollServer(true));
+      document.getElementById("btn-solve").addEventListener("click", () => {
+        fetch("{% url 'advisor:solve_anomaly' %}", { credentials: "same-origin" })
+          .then(() => pollServer(false))
+          .catch((error) => console.log("resolve error", error));
+      });
+
+      document.getElementById("sidebar-toggle").addEventListener("click", () => {
+        document.querySelector(".app-layout").classList.toggle("sidebar-hidden");
+      });
     });
-}
-
-function updateFromServer(data) {
-    // update chart
-    const labels = data.hourly.map(p => p.timestamp);
-    const costs = data.hourly.map(p => p.cost);
-    const future = data.future || [];
-
-    // rebuild the chart data arrays
-    const futureLabels = future.map(p => p.timestamp);
-    const futureVals = future.map(p => p.predicted);
-
-    chart.data.labels = labels.concat(futureLabels);
-    chart.data.datasets[0].data = costs.concat(new Array(futureLabels.length).fill(null));
-    chart.data.datasets[1].data = new Array(labels.length).fill(null).concat(futureVals);
-    chart.update();
-
-    // update top anomalies list (DOM id: anomaly-rows)
-    const anomContainer = document.getElementById('anomaly-rows');
-    if (anomContainer && data.top_anomalies) {
-        anomContainer.innerHTML = '';
-        data.top_anomalies.forEach(a => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `<td>${a.timestamp}</td>
-                            <td><span class="service-tag">${a.service}</span></td>
-                            <td class="table-desc">${a.description}</td>
-                            <td><span class="severity ${a.severity.toLowerCase()}">${a.severity}</span></td>`;
-            anomContainer.appendChild(tr);
-        });
-    }
-
-    // update recommendations (container id: rec-rows)
-    const recContainer = document.getElementById('rec-rows');
-    if (recContainer && data.top_recs) {
-        recContainer.innerHTML = '';
-        data.top_recs.forEach(r => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `<td>${r.title}</td>
-                            <td class="service-tag">${r.service}</td>
-                            <td><span class="savings-value">${r.savings_text}</span></td>`;
-            recContainer.appendChild(tr);
-        });
-    }
-
-    // flash if new anomalies arrived
-    if (data.new_anomalies && data.new_anomalies.length > 0) {
-        // simple highlight
-        document.querySelectorAll('.anomaly-table .card').forEach(c => {
-            c.classList.add('data-active');
-            setTimeout(()=> c.classList.remove('data-active'), 1500);
-        });
-    }
-}
-
-// poll every 5s
-let polling = true;
-function pollServer(forceAnomaly=false) {
-    const url = `{% url 'advisor:live_update' %}` + (forceAnomaly ? '?force=1' : '');
-    fetch(url, { credentials: 'same-origin' })
-        .then(r => r.json())
-        .then(data => updateFromServer(data))
-        .catch(e => console.log("poll error", e));
-}
-
-// init
-document.addEventListener('DOMContentLoaded', () => {
-    const initPoints = {{ hourly_chart_json|safe }};
-    initChart(initPoints, []);
-    // start polling every 5 seconds (simulate 1 hour per 5s)
-    setInterval(()=> pollServer(false), 5000);
-    // wire trigger button
-    const btn = document.getElementById('btn-trigger');
-    if (btn) btn.addEventListener('click', ()=> { pollServer(true); });
-});
-</script>
+  </script>
 </body>
+
 </html>

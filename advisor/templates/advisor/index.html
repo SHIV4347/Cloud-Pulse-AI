@@ -1,30 +1,34 @@
 {% load static %}
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CloudPulse AI - Optimize, Predict & Save</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{% static 'advisor/css/styles.css' %}">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CloudPulse AI - Optimize, Predict & Save</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <link rel="stylesheet" href="{% static 'advisor/css/styles.css' %}?v=finops-ui-4">
 </head>
+<body class="landing-page simple-landing">
+  <canvas id="neural-bg" class="neural-bg" aria-hidden="true"></canvas>
 
-<body>
+  <main class="landing-content">
+    <section class="glass-card landing-card" aria-labelledby="landing-title">
+      <a href="{% url 'advisor:index' %}" class="auth-logo">
+        <span class="brand-icon"><i class="fa-solid fa-bolt"></i></span>
+        <span>CloudPulse AI</span>
+      </a>
+      <h1 id="landing-title">CloudPulse AI</h1>
+      <p class="subtitle">Optimize, Predict & Save with intelligent FinOps automation.</p>
+      <a href="{% url 'advisor:login' %}" class="cta-button">
+        <i class="fa-solid fa-right-to-bracket"></i>
+        Go to Login
+      </a>
+    </section>
+  </main>
 
-    <!-- Background Video -->
-    <video autoplay muted loop playsinline id="bg-video">
-        <source src="{% static 'advisor/video/index_video.mov' %}" >
-    </video>
-
-    <div class="landing-content">
-        <div class="glass-card">
-            <h1>CloudPulse AI</h1>
-            <p class="subtitle">“Optimize, Predict & Save with intelligent FinOps automation.”</p>
-
-            <a href="{% url 'advisor:login' %}" class="cta-button">Go to Login</a>
-        </div>
-    </div>
-
+  <script src="{% static 'advisor/js/neural-bg.js' %}?v=finops-ui-4"></script>
 </body>
 </html>
