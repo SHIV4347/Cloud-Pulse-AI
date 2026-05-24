@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: cloudpulse-ai
+    env: python
+    buildCommand: "./build.sh"
+    startCommand: "gunicorn cloudPulse.wsgi:application"
+    envVars:
+      - key: DEBUG
+        value: False
+
+      - key: SECRET_KEY
+        generateValue: true
+
+      - key: EMAIL_HOST_USER
+        sync: false
+
+      - key: EMAIL_HOST_PASSWORD
+        sync: false
