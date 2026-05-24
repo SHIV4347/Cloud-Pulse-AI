@@ -6,165 +6,421 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Profile - CloudPulse AI</title>
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&display=swap"
     rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-  <link rel="stylesheet" href="{% static 'advisor/css/styles.css' %}?v=finops-ui-4">
+
+  <link rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+  <link rel="stylesheet"
+    href="{% static 'advisor/css/styles.css' %}?v=profile-fixed-final">
+
 </head>
 
 <body class="app-body">
-  <canvas id="neural-bg" class="neural-bg" aria-hidden="true"></canvas>
+
+  <canvas id="neural-bg"
+    class="neural-bg"
+    aria-hidden="true"></canvas>
 
   <div class="app-layout">
-    <aside class="sidebar" aria-label="CloudPulse navigation">
-      <a href="{% url 'advisor:dashboard' %}" class="logo">
-        <span class="logo-icon"><i class="fa-solid fa-bolt"></i></span>
+
+    <!-- SIDEBAR -->
+
+    <aside class="sidebar"
+      aria-label="CloudPulse navigation">
+
+      <a href="{% url 'advisor:dashboard' %}"
+        class="logo">
+
+        <span class="logo-icon">
+          <i class="fa-solid fa-bolt"></i>
+        </span>
+
         <span>CloudPulse AI</span>
+
       </a>
 
-      <nav class="sidebar-nav" aria-label="Dashboard navigation">
-        <a href="{% url 'advisor:dashboard' %}"><i class="fa-solid fa-gauge-high"></i> Dashboard</a>
-        <a href="{% url 'advisor:anomalies_list' %}"><i class="fa-solid fa-triangle-exclamation"></i> Anomalies</a>
-        <a href="{% url 'advisor:recommendations_list' %}"><i class="fa-solid fa-leaf"></i> Recommendations</a>
-        <a href="{% url 'advisor:profile' %}" class="active"><i class="fa-solid fa-user-gear"></i> Profile</a>
+      <nav class="sidebar-nav"
+        aria-label="Dashboard navigation">
+
+        <a href="{% url 'advisor:dashboard' %}">
+
+          <i class="fa-solid fa-gauge-high"></i>
+
+          Dashboard
+
+        </a>
+
+        <a href="{% url 'advisor:anomalies_list' %}">
+
+          <i class="fa-solid fa-triangle-exclamation"></i>
+
+          Anomalies
+
+        </a>
+
+        <a href="{% url 'advisor:recommendations_list' %}">
+
+          <i class="fa-solid fa-leaf"></i>
+
+          Recommendations
+
+        </a>
+
+        <a href="{% url 'advisor:profile' %}"
+          class="active">
+
+          <i class="fa-solid fa-user-gear"></i>
+
+          Profile
+
+        </a>
+
       </nav>
 
       <div class="sidebar-footer">
+
         <div class="user-mini">
+
           <i class="fa-solid fa-circle-user"></i>
+
           <div>
-            <strong>{{ request.user.username }}</strong>
-            <span>{{ request.user.email|default:"FinOps operator" }}</span>
+
+            <strong>
+              {{ request.user.username }}
+            </strong>
+
+            <span>
+              {{ request.user.email|default:"FinOps operator" }}
+            </span>
+
           </div>
+
         </div>
-        <a href="{% url 'advisor:logout' %}" class="nav-user-button"><i
-            class="fa-solid fa-arrow-right-from-bracket"></i> Logout</a>
+
+        <a href="{% url 'advisor:logout' %}"
+          class="nav-user-button">
+
+          <i class="fa-solid fa-arrow-right-from-bracket"></i>
+
+          Logout
+
+        </a>
+
       </div>
+
     </aside>
 
+    <!-- MAIN -->
+
     <main class="app-main">
+
       <section class="page-header">
-        <div style="display: flex; align-items: center; gap: 20px;">
-          <button id="sidebar-toggle" class="neon-button" aria-label="Toggle Sidebar" style="padding: 10px 14px;">
+
+        <div style="display:flex;align-items:center;gap:20px;">
+
+          <button id="sidebar-toggle"
+            class="neon-button"
+            aria-label="Toggle Sidebar"
+            style="padding:10px 14px;">
+
             <i class="fa-solid fa-bars"></i>
+
           </button>
+
           <div>
+
             <h1>Profile</h1>
+
           </div>
+
         </div>
+
       </section>
 
       <div class="profile-layout">
+
+        <!-- PROFILE CARD -->
+
         <section class="card user-info-card">
-          <div class="avatar"><i class="fa-solid fa-user"></i></div>
-          <h2 class="card-title">{{ request.user.username }}</h2>
-          <div class="profile-detail"><span class="profile-label">Name</span><span class="profile-value">{{
-              request.user.get_full_name|default:"Not set" }}</span></div>
-          <div class="profile-detail"><span class="profile-label">Email</span><span class="profile-value">{{
-              request.user.email }}</span></div>
-          <div class="profile-detail"><span class="profile-label">Company</span><span class="profile-value">{{
-              request.user.profile.company|default:"Not set" }}</span></div>
+
+          <div class="avatar">
+
+            <i class="fa-solid fa-user"></i>
+
+          </div>
+
+          <h2 class="card-title">
+
+            {{ request.user.username }}
+
+          </h2>
+
+          <div class="profile-detail">
+
+            <span class="profile-label">
+              Name
+            </span>
+
+            <span class="profile-value">
+
+              {{ request.user.first_name }}
+              {{ request.user.last_name }}
+
+            </span>
+
+          </div>
+
+          <div class="profile-detail">
+
+            <span class="profile-label">
+              Email
+            </span>
+
+            <span class="profile-value">
+
+              {{ request.user.email }}
+
+            </span>
+
+          </div>
+
+          <div class="profile-detail">
+
+            <span class="profile-label">
+              Company
+            </span>
+
+            <span class="profile-value">
+
+              {{ profile.company|default:"Not set" }}
+
+            </span>
+
+          </div>
+
         </section>
+
+        <!-- PROFILE FORM -->
 
         <section class="card">
-          <h2 class="card-title"><i class="fa-solid fa-sliders"></i> Account details</h2>
-          <form method="post" action="{% url 'advisor:profile' %}">
+
+          <h2 class="card-title">
+
+            <i class="fa-solid fa-sliders"></i>
+
+            Account details
+
+          </h2>
+
+          <form method="post"
+            action="{% url 'advisor:profile' %}">
+
             {% csrf_token %}
+
             <div class="form-grid compact">
+
               <div class="form-group">
-                <label>First name</label>
-                <input name="first_name" value="{{ form.first_name|default:'' }}" required>
-                {% if errors.first_name %}<div class="field-error">{{ errors.first_name }}</div>{% endif %}
+
+                <label>
+                  First name
+                </label>
+
+                <input name="first_name"
+                  value="{{ request.user.first_name }}"
+                  required>
+
               </div>
+
               <div class="form-group">
-                <label>Last name</label>
-                <input name="last_name" value="{{ form.last_name|default:'' }}" required>
-                {% if errors.last_name %}<div class="field-error">{{ errors.last_name }}</div>{% endif %}
+
+                <label>
+                  Last name
+                </label>
+
+                <input name="last_name"
+                  value="{{ request.user.last_name }}"
+                  required>
+
               </div>
+
             </div>
 
             <div class="form-grid compact">
+
               <div class="form-group">
-                <label>Username</label>
-                <input name="username" value="{{ form.username|default:'' }}" minlength="3" required>
-                {% if errors.username %}<div class="field-error">{{ errors.username }}</div>{% endif %}
+
+                <label>
+                  Username
+                </label>
+
+                <input name="username"
+                  value="{{ request.user.username }}"
+                  minlength="3"
+                  required>
+
               </div>
+
               <div class="form-group">
-                <label>Email</label>
-                <input name="email" type="email" value="{{ form.email|default:'' }}" required>
-                {% if errors.email %}<div class="field-error">{{ errors.email }}</div>{% endif %}
+
+                <label>
+                  Email
+                </label>
+
+                <input name="email"
+                  type="email"
+                  value="{{ request.user.email }}"
+                  required>
+
               </div>
+
             </div>
 
             <div class="form-grid compact">
+
               <div class="form-group">
-                <label>Phone</label>
-                <input name="phone" value="{{ form.phone|default:'' }}" required>
-                {% if errors.phone %}<div class="field-error">{{ errors.phone }}</div>{% endif %}
+
+                <label>
+                  Phone
+                </label>
+
+                <input name="phone"
+                  value="{{ profile.phone|default:'' }}">
+
               </div>
+
               <div class="form-group">
-                <label>Company</label>
-                <input name="company" value="{{ form.company|default:'' }}" required>
-                {% if errors.company %}<div class="field-error">{{ errors.company }}</div>{% endif %}
+
+                <label>
+                  Company
+                </label>
+
+                <input name="company"
+                  value="{{ profile.company|default:'' }}">
+
               </div>
+
             </div>
 
             <div class="form-grid compact">
+
               <div class="form-group">
-                <label>Role</label>
-                <input name="role" value="{{ form.role|default:'' }}" required>
-                {% if errors.role %}<div class="field-error">{{ errors.role }}</div>{% endif %}
+
+                <label>
+                  Role
+                </label>
+
+                <input name="role"
+                  value="{{ profile.role|default:'' }}">
+
               </div>
+
               <div class="form-group">
-                <label>Cloud provider</label>
-                <select name="cloud_provider" required>
-                  <option value="" {% if not form.cloud_provider %}selected{% endif %}>Select provider</option>
-                  <option value="AWS" {% if form.cloud_provider == 'AWS' %}selected{% endif %}>AWS</option>
-                  <option value="Azure" {% if form.cloud_provider == 'Azure' %}selected{% endif %}>Azure</option>
-                  <option value="GCP" {% if form.cloud_provider == 'GCP' %}selected{% endif %}>GCP</option>
-                  <option value="Multi-cloud" {% if form.cloud_provider == 'Multi-cloud' %}selected{% endif %}>Multi-cloud
+
+                <label>
+                  Cloud provider
+                </label>
+
+                <select name="cloud_provider"
+                  required>
+
+                  <option value="AWS"
+                    selected>
+
+                    AWS
+
                   </option>
-                  <option value="Other" {% if form.cloud_provider == 'Other' %}selected{% endif %}>Other</option>
+
                 </select>
-                {% if errors.cloud_provider %}<div class="field-error">{{ errors.cloud_provider }}</div>{% endif %}
+
               </div>
+
             </div>
 
             <div class="form-grid compact">
+
               <div class="form-group">
-                <label>Monthly cloud budget</label>
-                <input name="monthly_budget" type="number" min="0" step="0.01"
-                  value="{{ form.monthly_budget|default:'' }}">
-                {% if errors.monthly_budget %}<div class="field-error">{{ errors.monthly_budget }}</div>{% endif %}
+
+                <label>
+                  Monthly cloud budget
+                </label>
+
+                <input name="monthly_budget"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value="{{ profile.monthly_budget|default:'' }}">
+
               </div>
+
               <div class="form-group">
-                <label>Extra notification emails</label>
-                <input name="extra_emails" value="{{ form.extra_emails|default:'' }}"
-                  placeholder="team1@example.com, team2@example.com">
-                {% if errors.extra_emails %}<div class="field-error">{{ errors.extra_emails }}</div>{% endif %}
+
+                <label>
+                  Extra notification emails
+                </label>
+
+                <input name="extra_emails"
+                  value="{{ profile.extra_emails|default:'' }}"
+                  placeholder="team@example.com">
+
               </div>
+
             </div>
 
-            <button class="cta-button" type="submit"><i class="fa-solid fa-check"></i> Save</button>
+            <button class="cta-button"
+              type="submit">
+
+              <i class="fa-solid fa-check"></i>
+
+              Save
+
+            </button>
+
           </form>
+
         </section>
+
       </div>
+
     </main>
+
   </div>
 
-  <script src="{% static 'advisor/js/neural-bg.js' %}?v=finops-ui-4"></script>
-  <script>
-    document.addEventListener("DOMContentLoaded", () => {
-      const toggleBtn = document.getElementById("sidebar-toggle");
-      if (toggleBtn) {
-        toggleBtn.addEventListener("click", () => {
-          document.querySelector(".app-layout").classList.toggle("sidebar-hidden");
-        });
-      }
-    });
-  </script>
-</body>
+  <script src="{% static 'advisor/js/neural-bg.js' %}?v=profile-fixed-final"></script>
 
+  <script>
+
+    document.addEventListener(
+      "DOMContentLoaded",
+      () => {
+
+        const toggleBtn =
+          document.getElementById(
+            "sidebar-toggle"
+          );
+
+        if (toggleBtn) {
+
+          toggleBtn.addEventListener(
+            "click",
+            () => {
+
+              document
+                .querySelector(".app-layout")
+                .classList
+                .toggle("sidebar-hidden");
+            }
+          );
+        }
+      }
+    );
+
+  </script>
+
+</body>
 </html>

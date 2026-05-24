@@ -3,354 +3,483 @@
 <html lang="en">
 
 <head>
+
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <meta name="viewport"
+    content="width=device-width, initial-scale=1">
+
   <title>CloudPulse AI - Dashboard</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+  <link rel="preconnect"
+    href="https://fonts.googleapis.com">
+
+  <link rel="preconnect"
+    href="https://fonts.gstatic.com"
+    crossorigin>
+
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&display=swap"
     rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-  <link rel="stylesheet" href="{% static 'advisor/css/styles.css' %}?v=finops-ui-4">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+  <link rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+  <link rel="stylesheet"
+    href="{% static 'advisor/css/styles.css' %}?v=final-finops-ai">
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 </head>
 
 <body class="dashboard-body">
-  <canvas id="neural-bg" class="neural-bg" aria-hidden="true"></canvas>
+
+  <canvas id="neural-bg"
+    class="neural-bg"></canvas>
+
+  <div id="live-alert"
+    class="live-alert hidden">
+
+    <i class="fa-solid fa-triangle-exclamation"></i>
+
+    <span id="live-alert-text">
+      AI anomaly detected
+    </span>
+
+  </div>
 
   <div class="app-layout">
-    <aside class="sidebar" aria-label="CloudPulse navigation">
-      <a href="{% url 'advisor:dashboard' %}" class="logo">
-        <span class="logo-icon"><i class="fa-solid fa-bolt"></i></span>
+
+    <aside class="sidebar">
+
+      <a href="{% url 'advisor:dashboard' %}"
+        class="logo">
+
+        <span class="logo-icon">
+          <i class="fa-solid fa-bolt"></i>
+        </span>
+
         <span>CloudPulse AI</span>
+
       </a>
 
-      <nav class="sidebar-nav" aria-label="Dashboard navigation">
-        <a href="{% url 'advisor:dashboard' %}" class="active"><i class="fa-solid fa-gauge-high"></i> Dashboard</a>
-        <a href="{% url 'advisor:anomalies_list' %}"><i class="fa-solid fa-triangle-exclamation"></i> Anomalies</a>
-        <a href="{% url 'advisor:recommendations_list' %}"><i class="fa-solid fa-leaf"></i> Recommendations</a>
-        <a href="{% url 'advisor:profile' %}"><i class="fa-solid fa-user-gear"></i> Profile</a>
+      <nav class="sidebar-nav">
+
+        <a href="{% url 'advisor:dashboard' %}"
+          class="active">
+
+          <i class="fa-solid fa-gauge-high"></i>
+
+          Dashboard
+
+        </a>
+
+        <a href="{% url 'advisor:anomalies_list' %}">
+
+          <i class="fa-solid fa-triangle-exclamation"></i>
+
+          Anomalies
+
+        </a>
+
+        <a href="{% url 'advisor:recommendations_list' %}">
+
+          <i class="fa-solid fa-lightbulb"></i>
+
+          Recommendations
+
+        </a>
+
+        <a href="{% url 'advisor:profile' %}">
+
+          <i class="fa-solid fa-user"></i>
+
+          Profile
+
+        </a>
+
       </nav>
 
-      <div class="sidebar-footer">
-        <div class="user-mini">
-          <i class="fa-solid fa-circle-user"></i>
-          <div>
-            <strong>{{ request.user.username }}</strong>
-            <span>{{ request.user.email|default:"FinOps operator" }}</span>
-          </div>
-        </div>
-        <a href="{% url 'advisor:logout' %}" class="nav-user-button">
-          <i class="fa-solid fa-arrow-right-from-bracket"></i>
-          Logout
-        </a>
-      </div>
     </aside>
 
     <main class="dashboard-main">
+
       <header class="topbar">
-        <div style="display: flex; align-items: center; gap: 20px;">
-          <button id="sidebar-toggle" class="neon-button" aria-label="Toggle Sidebar" style="padding: 10px 14px;">
-            <i class="fa-solid fa-bars"></i>
-          </button>
-          <div>
-            <!-- <span class="eyebrow"><i class="fa-solid fa-satellite-dish"></i> Live Monitoring</span> -->
-            <h1>FinOps Dashboard</h1>
-            <p>Cloud cost, forecast, anomalies, and savings in one operational view.</p>
-          </div>
+
+        <div>
+
+          <h1>FinOps Dashboard</h1>
+
+          <p>
+            AI-powered AWS telemetry,
+            anomaly detection,
+            and cost forecasting.
+          </p>
+
         </div>
+
         <div class="topbar-actions">
-          <button id="btn-trigger" class="btn-red" type="button"><i class="fa-solid fa-bolt"></i> Trigger</button>
-          <button id="btn-solve" class="btn-green" type="button"><i class="fa-solid fa-check"></i> Resolve</button>
-          <span class="live-dot">Live</span>
+
+          <button id="btn-trigger"
+            class="btn-red">
+
+            <i class="fa-solid fa-bolt"></i>
+
+            Trigger
+
+          </button>
+
+          <span class="live-dot">
+
+            LIVE
+
+          </span>
+
         </div>
+
       </header>
 
-      <section class="summary-cards" aria-label="Cloud cost summary">
-        <article class="stat-card alert" id="stat-actual">
-          <div class="card-title">Actual cost - last 30 days</div>
+      <!-- SUMMARY -->
+
+      <section class="summary-cards">
+
+        <article class="stat-card alert">
+
+          <div class="card-title">
+            Actual Cost
+          </div>
+
           <div class="metric-row">
-            <div class="metric-value" id="actual-cost">${{ summary.total_cost|default:"0.00" }}</div>
-            <span class="metric-icon"><i class="fa-solid fa-fire-flame-curved"></i></span>
+
+            <div class="metric-value">
+
+              ${{ summary.total_cost }}
+
+            </div>
+
+            <span class="metric-icon">
+
+              <i class="fa-solid fa-fire"></i>
+
+            </span>
+
           </div>
-          <div class="metric-change negative">
-            <i class="fa-solid fa-arrow-trend-up"></i>
-            {{ summary.change_percentage|default:"0.0" }}% vs previous
-          </div>
-          <div class="progress-track" aria-hidden="true">
-            <div class="progress-bar" style="--progress: 76%"></div>
-          </div>
+
         </article>
 
-        <article class="stat-card" id="stat-forecast">
-          <div class="card-title">Forecasted cost - next 30 days</div>
+        <article class="stat-card">
+
+          <div class="card-title">
+            Forecasted Cost
+          </div>
+
           <div class="metric-row">
-            <div class="metric-value" id="forecast-cost">${{ summary.predicted_next_month|default:"0.00" }}</div>
-            <span class="metric-icon"><i class="fa-solid fa-chart-line"></i></span>
+
+            <div class="metric-value">
+
+              ${{ summary.predicted_next_month }}
+
+            </div>
+
+            <span class="metric-icon">
+
+              <i class="fa-solid fa-chart-line"></i>
+
+            </span>
+
           </div>
-          <div class="metric-change"><i class="fa-solid fa-brain"></i> Model prediction</div>
-          <div class="progress-track" aria-hidden="true">
-            <div class="progress-bar" style="--progress: 58%"></div>
-          </div>
+
         </article>
 
-        <article class="stat-card success" id="stat-savings">
-          <div class="card-title">Savings potential</div>
+        <article class="stat-card success">
+
+          <div class="card-title">
+            Savings Potential
+          </div>
+
           <div class="metric-row">
-            <div class="metric-value" id="savings-cost">${{ summary.savings|default:"0.00" }}</div>
-            <span class="metric-icon"><i class="fa-solid fa-piggy-bank"></i></span>
+
+            <div class="metric-value">
+
+              ${{ summary.savings }}
+
+            </div>
+
+            <span class="metric-icon">
+
+              <i class="fa-solid fa-piggy-bank"></i>
+
+            </span>
+
           </div>
-          <div class="metric-change positive"><i class="fa-solid fa-leaf"></i> Optimized estimate</div>
-          <div class="progress-track" aria-hidden="true">
-            <div class="progress-bar" style="--progress: 64%"></div>
-          </div>
+
         </article>
+
       </section>
+
+      <!-- CHART -->
 
       <section class="dashboard-grid-full">
+
         <article class="data-panel charts-section">
+
           <div class="panel-header">
+
             <div>
-              <span class="card-title">Hourly simulation</span>
-              <h2>Cloud spend telemetry</h2>
+
+              <span class="card-title">
+                Hourly telemetry
+              </span>
+
+              <h2>AWS cost simulation</h2>
+
             </div>
-            <span class="eyebrow"><i class="fa-solid fa-wave-square"></i> Chart.js</span>
+
+            <span class="eyebrow">
+
+              <i class="fa-solid fa-brain"></i>
+
+              ML anomaly detection
+
+            </span>
+
           </div>
+
           <div class="chart-wrap">
+
             <canvas id="hourlyChart"></canvas>
+
           </div>
-          <div class="chart-legend">
-            <span class="legend-item"><span class="legend-swatch"></span>Actual spend</span>
-            <span class="legend-item"><span class="legend-swatch prediction"></span>Predicted spend</span>
-          </div>
+
         </article>
+
       </section>
 
-      <section class="bottom-split-grid" style="margin-top: 16px;">
-        <section class="data-panel anomaly-table" aria-labelledby="anomaly-title">
-          <div class="panel-header">
-            <h3 id="anomaly-title"><i class="fa-solid fa-triangle-exclamation"></i> Anomaly alerts</h3>
-            <a href="{% url 'advisor:anomalies_list' %}" class="panel-link">View all</a>
-          </div>
-          <div class="tile-list" id="anomaly-rows">
-            {% for a in top_anomalies %}
-            <article class="mini-tile {% if a.severity == 'HIGH' %}high{% endif %}">
-              <div class="tile-meta">
-                <span>{{ a.timestamp }}</span>
-                <span class="severity {{ a.severity|lower }}">{{ a.severity }}</span>
-              </div>
-              <strong class="service-tag">{{ a.service }}</strong>
-              <p class="tile-title">{{ a.description }}</p>
-            </article>
-            {% empty %}
-            <p class="empty-state">No recent anomalies.</p>
-            {% endfor %}
-          </div>
-        </section>
-
-        <section class="data-panel recommendations-table" aria-labelledby="recommendation-title">
-          <div class="panel-header">
-            <h3 id="recommendation-title"><i class="fa-solid fa-lightbulb"></i> Savings queue</h3>
-            <a href="{% url 'advisor:recommendations_list' %}" class="panel-link">View all</a>
-          </div>
-          <div class="tile-list" id="rec-rows">
-            {% for r in top_recs %}
-            <article class="mini-tile">
-              <div class="tile-meta">
-                <span class="service-tag">{{ r.service }}</span>
-                <span class="savings-value">${{ r.savings_value }}</span>
-              </div>
-              <p class="tile-title">{{ r.title|default:r.title }}</p>
-            </article>
-            {% empty %}
-            <p class="empty-state">No recommendations.</p>
-            {% endfor %}
-          </div>
-        </section>
-      </section>
-
-      <footer class="dashboard-footer">
-        &copy; 2026 CloudPulse AI. Privacy and terms apply.
-      </footer>
     </main>
+
   </div>
 
-  <script src="{% static 'advisor/js/neural-bg.js' %}?v=finops-ui-4"></script>
   <script>
-    const initialPoints = {{ hourly_chart_json| safe }};
+
+    const initialPoints =
+      {{ hourly_chart_json|safe }};
+
+    const anomalyPoints =
+      {{ anomaly_points_json|safe }};
+
+    const forecastPoints =
+      {{ forecast_chart_json|safe }};
+
     let chart;
 
-    function formatMoney(value) {
-      const number = Number(value || 0);
-      return `$${number.toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
+    function showAlert(message) {
+
+      const box =
+        document.getElementById("live-alert");
+
+      const text =
+        document.getElementById("live-alert-text");
+
+      text.textContent = message;
+
+      box.classList.remove("hidden");
+
+      box.classList.add("show");
+
+      setTimeout(() => {
+
+        box.classList.remove("show");
+
+      }, 4000);
     }
 
-    function setText(id, value) {
-      const node = document.getElementById(id);
-      if (node) node.textContent = value;
-    }
+    function buildAnomalyDataset(
+      labels,
+      anomalies,
+      spendData
+    ) {
 
-    function makeTile(className) {
-      const tile = document.createElement("article");
-      tile.className = className;
-      return tile;
-    }
+      return labels.map((label, idx) => {
 
-    function renderAnomalies(items) {
-      const container = document.getElementById("anomaly-rows");
-      if (!container) return;
-      container.textContent = "";
+        const found =
+          anomalies.find(a => {
 
-      if (!items || items.length === 0) {
-        const empty = document.createElement("p");
-        empty.className = "empty-state";
-        empty.textContent = "No recent anomalies.";
-        container.appendChild(empty);
-        return;
-      }
+            return a.timestamp
+              .substring(0,16)
+              === label.substring(0,16);
+          });
 
-      items.forEach((item) => {
-        const severity = String(item.severity || "LOW").toLowerCase();
-        const tile = makeTile(`mini-tile ${severity === "high" ? "high" : ""}`);
+        if (found) {
 
-        const meta = document.createElement("div");
-        meta.className = "tile-meta";
-        const time = document.createElement("span");
-        time.textContent = item.timestamp || "";
-        const badge = document.createElement("span");
-        badge.className = `severity ${severity}`;
-        badge.textContent = item.severity || "LOW";
-        meta.append(time, badge);
+          return spendData[idx];
+        }
 
-        const service = document.createElement("strong");
-        service.className = "service-tag";
-        service.textContent = item.service || "Unknown";
-
-        const title = document.createElement("p");
-        title.className = "tile-title";
-        title.textContent = item.description || "Anomaly detected.";
-
-        tile.append(meta, service, title);
-        container.appendChild(tile);
+        return null;
       });
     }
 
-    function renderRecommendations(items) {
-      const container = document.getElementById("rec-rows");
-      if (!container) return;
-      container.textContent = "";
+    function initChart() {
 
-      if (!items || items.length === 0) {
-        const empty = document.createElement("p");
-        empty.className = "empty-state";
-        empty.textContent = "No recommendations.";
-        container.appendChild(empty);
-        return;
-      }
+      const labels = [
+        ...initialPoints.map(
+          p => p.timestamp
+        ),
 
-      items.forEach((item) => {
-        const tile = makeTile("mini-tile");
-        const meta = document.createElement("div");
-        meta.className = "tile-meta";
+        ...forecastPoints.map(
+          p => p.timestamp
+        )
+      ];
 
-        const service = document.createElement("span");
-        service.className = "service-tag";
-        service.textContent = item.service || "Cloud";
+      const spendData = [
+        ...initialPoints.map(
+          p => p.cost
+        ),
 
-        const savings = document.createElement("span");
-        savings.className = "savings-value";
-        savings.textContent = item.savings_text || formatMoney(item.savings_value);
+        ...Array(
+          forecastPoints.length
+        ).fill(null)
+      ];
 
-        const title = document.createElement("p");
-        title.className = "tile-title";
-        title.textContent = item.title || "Optimization recommendation";
+      const forecastData = [
 
-        meta.append(service, savings);
-        tile.append(meta, title);
-        container.appendChild(tile);
-      });
-    }
+        ...Array(
+          initialPoints.length
+        ).fill(null),
 
-    function initChart(points, futurePoints) {
-      const canvas = document.getElementById("hourlyChart");
-      const ctx = canvas.getContext("2d");
-      const gradient = ctx.createLinearGradient(0, 0, 0, 360);
-      gradient.addColorStop(0, "rgba(0, 242, 254, 0.28)");
-      gradient.addColorStop(1, "rgba(0, 242, 254, 0.01)");
+        ...forecastPoints.map(
+          p => p.cost
+        )
+      ];
 
-      const predictionGradient = ctx.createLinearGradient(0, 0, 0, 360);
-      predictionGradient.addColorStop(0, "rgba(57, 255, 20, 0.18)");
-      predictionGradient.addColorStop(1, "rgba(57, 255, 20, 0)");
+      const anomalyData =
+        buildAnomalyDataset(
 
-      const labels = points.map((point) => point.timestamp);
-      const costs = points.map((point) => point.cost);
-      const future = futurePoints || [];
-      const futureLabels = future.map((point) => point.timestamp);
-      const futureVals = future.map((point) => point.predicted);
+          initialPoints.map(
+            p => p.timestamp
+          ),
+
+          anomalyPoints,
+
+          initialPoints.map(
+            p => p.cost
+          )
+        );
+
+      const fullAnomalyData = [
+
+        ...anomalyData,
+
+        ...Array(
+          forecastPoints.length
+        ).fill(null)
+      ];
+
+      const ctx =
+        document.getElementById(
+          "hourlyChart"
+        );
 
       chart = new Chart(ctx, {
+
         type: "line",
+
         data: {
-          labels: labels.concat(futureLabels),
+
+          labels: labels,
+
           datasets: [
+
             {
-              label: "Actual spend",
-              data: costs.concat(new Array(futureLabels.length).fill(null)),
+
+              label: "AWS Spend",
+
+              data: spendData,
+
               borderColor: "#00F2FE",
-              backgroundColor: gradient,
+
+              backgroundColor:
+                "rgba(0,242,254,0.08)",
+
               fill: true,
-              tension: 0.38,
-              pointRadius: 2.8,
-              pointHoverRadius: 6,
-              pointBackgroundColor: "#090D16",
-              pointBorderColor: "#00F2FE",
-              pointBorderWidth: 2,
-              borderWidth: 2.5
+
+              tension: 0.35,
+
+              borderWidth: 2.5,
+
+              pointRadius: 2,
             },
+
             {
-              label: "Predicted spend",
-              data: new Array(labels.length).fill(null).concat(futureVals),
-              borderColor: "#39FF14",
-              backgroundColor: predictionGradient,
-              borderDash: [8, 5],
-              fill: true,
-              tension: 0.34,
-              pointRadius: 2.8,
-              pointHoverRadius: 6,
-              pointBackgroundColor: "#090D16",
-              pointBorderColor: "#39FF14",
-              pointBorderWidth: 2,
-              borderWidth: 2.5
+
+              label: "ML Anomalies",
+
+              data: fullAnomalyData,
+
+              borderColor: "#ff3d57",
+
+              backgroundColor:
+                "#ff3d57",
+
+              pointRadius: 7,
+
+              pointHoverRadius: 9,
+
+              showLine: false,
+            },
+
+            {
+
+              label: "AI Forecast",
+
+              data: forecastData,
+
+              borderColor: "#9b5cff",
+
+              borderDash: [8, 6],
+
+              fill: false,
+
+              tension: 0.35,
+
+              pointRadius: 0,
             }
           ]
         },
+
         options: {
+
           responsive: true,
+
           maintainAspectRatio: false,
-          interaction: { intersect: false, mode: "index" },
+
           plugins: {
-            legend: { display: false },
-            tooltip: {
-              backgroundColor: "rgba(9, 13, 22, 0.92)",
-              borderColor: "rgba(0, 242, 254, 0.35)",
-              borderWidth: 1,
-              titleColor: "#F7FBFF",
-              bodyColor: "#D8E2F3",
-              padding: 12,
-              displayColors: false
+
+            legend: {
+
+              labels: {
+
+                color: "#dbe7ff"
+              }
             }
           },
+
           scales: {
+
             x: {
-              grid: { color: "rgba(255, 255, 255, 0.045)" },
-              ticks: { color: "#9BA9C4", maxRotation: 0, autoSkip: true, maxTicksLimit: 8 }
-            },
-            y: {
-              beginAtZero: true,
-              grid: { color: "rgba(0, 242, 254, 0.08)" },
+
               ticks: {
-                color: "#9BA9C4",
-                callback: (value) => `$${value}`
+                color: "#8FA4C3"
+              }
+            },
+
+            y: {
+
+              beginAtZero: true,
+
+              ticks: {
+
+                color: "#8FA4C3",
+
+                callback: v => `$${v}`
               }
             }
           }
@@ -358,59 +487,121 @@
       });
     }
 
-    function updateFromServer(data) {
-      const labels = data.hourly.map((point) => point.timestamp);
-      const costs = data.hourly.map((point) => point.cost);
-      const future = data.future || [];
-      const futureLabels = future.map((point) => point.timestamp);
-      const futureVals = future.map((point) => point.predicted);
+    function updateDashboard(data) {
 
-      chart.data.labels = labels.concat(futureLabels);
-      chart.data.datasets[0].data = costs.concat(new Array(futureLabels.length).fill(null));
-      chart.data.datasets[1].data = new Array(labels.length).fill(null).concat(futureVals);
-      chart.update("none");
+      if (!chart) return;
 
-      renderAnomalies(data.top_anomalies);
-      renderRecommendations(data.top_recs);
+      const labels = [
 
-      if (data.summary) {
-        setText("actual-cost", formatMoney(data.summary.total_cost));
-        setText("forecast-cost", formatMoney(data.summary.predicted_next_month));
-        setText("savings-cost", formatMoney(data.summary.savings));
-      }
+        ...data.hourly.map(
+          p => p.timestamp
+        ),
 
-      if (data.new_anomalies && data.new_anomalies.length > 0) {
-        document.querySelectorAll(".anomaly-table, #stat-actual").forEach((node) => {
-          node.classList.add("data-active");
-          window.setTimeout(() => node.classList.remove("data-active"), 1000);
-        });
+        ...data.forecast.map(
+          p => p.timestamp
+        )
+      ];
+
+      chart.data.labels = labels;
+
+      chart.data.datasets[0].data = [
+
+        ...data.hourly.map(
+          p => p.cost
+        ),
+
+        ...Array(
+          data.forecast.length
+        ).fill(null)
+      ];
+
+      chart.data.datasets[1].data = [
+
+        ...buildAnomalyDataset(
+
+          data.hourly.map(
+            p => p.timestamp
+          ),
+
+          data.top_anomalies || [],
+
+          data.hourly.map(
+            p => p.cost
+          )
+        ),
+
+        ...Array(
+          data.forecast.length
+        ).fill(null)
+      ];
+
+      chart.data.datasets[2].data = [
+
+        ...Array(
+          data.hourly.length
+        ).fill(null),
+
+        ...data.forecast.map(
+          p => p.cost
+        )
+      ];
+
+      chart.update();
+
+      if (
+        data.new_anomalies &&
+        data.new_anomalies.length
+      ) {
+
+        const latest =
+          data.new_anomalies[0];
+
+        showAlert(
+          `${latest.service} anomaly detected`
+        );
       }
     }
 
-    function pollServer(forceAnomaly) {
-      const url = `{% url 'advisor:live_update' %}` + (forceAnomaly ? "?force=1" : "");
-      fetch(url, { credentials: "same-origin" })
-        .then((response) => response.json())
-        .then(updateFromServer)
-        .catch((error) => console.log("poll error", error));
+    function poll(force=false) {
+
+      fetch(
+        `{% url 'advisor:live_update' %}` +
+        (force ? "?force=1" : "")
+      )
+
+      .then(r => r.json())
+
+      .then(updateDashboard);
     }
 
-    document.addEventListener("DOMContentLoaded", () => {
-      initChart(initialPoints, []);
-      window.setInterval(() => pollServer(false), 5000);
+    document.addEventListener(
+      "DOMContentLoaded",
+      () => {
 
-      document.getElementById("btn-trigger").addEventListener("click", () => pollServer(true));
-      document.getElementById("btn-solve").addEventListener("click", () => {
-        fetch("{% url 'advisor:solve_anomaly' %}", { credentials: "same-origin" })
-          .then(() => pollServer(false))
-          .catch((error) => console.log("resolve error", error));
-      });
+        initChart();
 
-      document.getElementById("sidebar-toggle").addEventListener("click", () => {
-        document.querySelector(".app-layout").classList.toggle("sidebar-hidden");
-      });
-    });
+        setInterval(() => {
+
+          poll(false);
+
+        }, 8000);
+
+        document
+          .getElementById("btn-trigger")
+          .addEventListener("click", () => {
+
+            showAlert(
+              "Injecting synthetic anomaly..."
+            );
+
+            poll(true);
+          });
+      }
+    );
+
   </script>
-</body>
 
+  <script src="{% static 'advisor/js/neural-bg.js' %}"></script>
+
+</body>
 </html>

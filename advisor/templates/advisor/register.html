@@ -1,143 +1,376 @@
 {% load static %}
+
 <!doctype html>
+
 <html lang="en">
+
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
   <title>Register - CloudPulse AI</title>
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-  <link rel="stylesheet" href="{% static 'advisor/css/styles.css' %}?v=finops-ui-4">
+
+  <link rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+  <link rel="stylesheet"
+    href="{% static 'advisor/css/styles.css' %}?v=aws-finops-final">
 </head>
+
 <body>
-  <canvas id="neural-bg" class="neural-bg" aria-hidden="true"></canvas>
+
+<canvas id="neural-bg" class="neural-bg" aria-hidden="true"></canvas>
 
   <main class="auth-page">
-    <section class="auth-card auth-card-wide" aria-labelledby="register-title">
-      <a href="{% url 'advisor:index' %}" class="auth-logo">
-        <span class="brand-icon"><i class="fa-solid fa-bolt"></i></span>
-        <span>CloudPulse AI</span>
-      </a>
-      <p class="auth-title">Create your predictive cloud savings cockpit.</p>
 
-      <form method="post" action="{% url 'advisor:register' %}">
-        {% csrf_token %}
-        {% if error %}<div class="error-message">{{ error }}</div>{% endif %}
 
-        <div class="form-grid compact">
-          <div>
-            <div class="input-group">
-              <i class="fa-solid fa-user"></i>
-              <input id="first_name" name="first_name" placeholder="First name" autocomplete="given-name" value="{{ form.first_name|default:'' }}" required>
-              <label for="first_name">First name</label>
-            </div>
-            {% if errors.first_name %}<div class="field-error">{{ errors.first_name }}</div>{% endif %}
-          </div>
+<section class="auth-card auth-card-wide">
 
-          <div>
-            <div class="input-group">
-              <i class="fa-solid fa-user"></i>
-              <input id="last_name" name="last_name" placeholder="Last name" autocomplete="family-name" value="{{ form.last_name|default:'' }}" required>
-              <label for="last_name">Last name</label>
-            </div>
-            {% if errors.last_name %}<div class="field-error">{{ errors.last_name }}</div>{% endif %}
-          </div>
-        </div>
+  <a href="{% url 'advisor:index' %}" class="auth-logo">
+    <span class="brand-icon">
+      <i class="fa-solid fa-bolt"></i>
+    </span>
 
+    <span>CloudPulse AI</span>
+  </a>
+
+  <p class="auth-title">
+    Create your AWS predictive cloud savings cockpit.
+  </p>
+
+  <form method="POST" action="{% url 'advisor:register' %}">
+
+    {% csrf_token %}
+
+    {% if error %}
+      <div class="error-message">
+        {{ error }}
+      </div>
+    {% endif %}
+
+    <!-- FIRST + LAST NAME -->
+
+    <div class="form-grid compact">
+
+      <div>
         <div class="input-group">
-          <i class="fa-solid fa-id-badge"></i>
-          <input id="username" name="username" placeholder="Username" autocomplete="username" value="{{ form.username|default:'' }}" minlength="3" required>
-          <label for="username">Username</label>
-        </div>
-        {% if errors.username %}<div class="field-error">{{ errors.username }}</div>{% endif %}
+          <i class="fa-solid fa-user"></i>
 
-        <div class="input-group">
-          <i class="fa-solid fa-envelope"></i>
-          <input id="email" name="email" type="email" placeholder="Email" autocomplete="email" value="{{ form.email|default:'' }}" required>
-          <label for="email">Email</label>
-        </div>
-        {% if errors.email %}<div class="field-error">{{ errors.email }}</div>{% endif %}
+          <input
+            type="text"
+            id="first_name"
+            name="first_name"
+            placeholder="First name"
+            autocomplete="given-name"
+            value="{{ form.first_name|default:'' }}"
+            required
+          >
 
-        <div class="form-grid compact">
-          <div>
-            <div class="input-group">
-              <i class="fa-solid fa-building"></i>
-              <input id="company" name="company" placeholder="Company" autocomplete="organization" value="{{ form.company|default:'' }}" required>
-              <label for="company">Company</label>
-            </div>
-            {% if errors.company %}<div class="field-error">{{ errors.company }}</div>{% endif %}
+          <label for="first_name">First name</label>
+        </div>
+
+        {% if errors.first_name %}
+          <div class="field-error">
+            {{ errors.first_name }}
           </div>
+        {% endif %}
+      </div>
 
-          <div>
-            <div class="input-group">
-              <i class="fa-solid fa-briefcase"></i>
-              <input id="role" name="role" placeholder="Role" value="{{ form.role|default:'' }}" required>
-              <label for="role">Role</label>
-            </div>
-            {% if errors.role %}<div class="field-error">{{ errors.role }}</div>{% endif %}
-          </div>
-        </div>
-
-        <div class="form-grid compact">
-          <div>
-            <div class="input-group">
-              <i class="fa-solid fa-phone"></i>
-              <input id="phone" name="phone" placeholder="Phone" autocomplete="tel" value="{{ form.phone|default:'' }}" required>
-              <label for="phone">Phone</label>
-            </div>
-            {% if errors.phone %}<div class="field-error">{{ errors.phone }}</div>{% endif %}
-          </div>
-
-          <div>
-            <div class="input-group select-group">
-              <i class="fa-solid fa-cloud"></i>
-              <select id="cloud_provider" name="cloud_provider" required>
-                <option value="" {% if not form.cloud_provider %}selected{% endif %}>Select provider</option>
-                <option value="AWS" {% if form.cloud_provider == 'AWS' %}selected{% endif %}>AWS</option>
-                <option value="Azure" {% if form.cloud_provider == 'Azure' %}selected{% endif %}>Azure</option>
-                <option value="GCP" {% if form.cloud_provider == 'GCP' %}selected{% endif %}>GCP</option>
-                <option value="Multi-cloud" {% if form.cloud_provider == 'Multi-cloud' %}selected{% endif %}>Multi-cloud</option>
-                <option value="Other" {% if form.cloud_provider == 'Other' %}selected{% endif %}>Other</option>
-              </select>
-              <label for="cloud_provider">Cloud provider</label>
-            </div>
-            {% if errors.cloud_provider %}<div class="field-error">{{ errors.cloud_provider }}</div>{% endif %}
-          </div>
-        </div>
-
+      <div>
         <div class="input-group">
-          <i class="fa-solid fa-wallet"></i>
-          <input id="monthly_budget" name="monthly_budget" type="number" min="0" step="0.01" placeholder="Monthly cloud budget" value="{{ form.monthly_budget|default:'' }}">
-          <label for="monthly_budget">Monthly cloud budget</label>
-        </div>
-        {% if errors.monthly_budget %}<div class="field-error">{{ errors.monthly_budget }}</div>{% endif %}
+          <i class="fa-solid fa-user"></i>
 
+          <input
+            type="text"
+            id="last_name"
+            name="last_name"
+            placeholder="Last name"
+            autocomplete="family-name"
+            value="{{ form.last_name|default:'' }}"
+            required
+          >
+
+          <label for="last_name">Last name</label>
+        </div>
+
+        {% if errors.last_name %}
+          <div class="field-error">
+            {{ errors.last_name }}
+          </div>
+        {% endif %}
+      </div>
+
+    </div>
+
+    <!-- USERNAME -->
+
+    <div class="input-group">
+      <i class="fa-solid fa-id-badge"></i>
+
+      <input
+        type="text"
+        id="username"
+        name="username"
+        placeholder="Username"
+        autocomplete="username"
+        minlength="3"
+        value="{{ form.username|default:'' }}"
+        required
+      >
+
+      <label for="username">Username</label>
+    </div>
+
+    {% if errors.username %}
+      <div class="field-error">
+        {{ errors.username }}
+      </div>
+    {% endif %}
+
+    <!-- EMAIL -->
+
+    <div class="input-group">
+      <i class="fa-solid fa-envelope"></i>
+
+      <input
+        type="email"
+        id="email"
+        name="email"
+        placeholder="Email"
+        autocomplete="email"
+        value="{{ form.email|default:'' }}"
+        required
+      >
+
+      <label for="email">Email</label>
+    </div>
+
+    {% if errors.email %}
+      <div class="field-error">
+        {{ errors.email }}
+      </div>
+    {% endif %}
+
+    <!-- COMPANY + ROLE -->
+
+    <div class="form-grid compact">
+
+      <div>
         <div class="input-group">
-          <i class="fa-solid fa-lock"></i>
-          <input id="password" name="password" type="password" placeholder="Password" autocomplete="new-password" required>
-          <label for="password">Password</label>
-        </div>
-        {% if errors.password %}<div class="field-error">{{ errors.password }}</div>{% endif %}
+          <i class="fa-solid fa-building"></i>
 
+          <input
+            type="text"
+            id="company"
+            name="company"
+            placeholder="Company"
+            autocomplete="organization"
+            value="{{ form.company|default:'Personal AWS Project' }}"
+          >
+
+          <label for="company">Company</label>
+        </div>
+
+        {% if errors.company %}
+          <div class="field-error">
+            {{ errors.company }}
+          </div>
+        {% endif %}
+      </div>
+
+      <div>
         <div class="input-group">
-          <i class="fa-solid fa-shield-halved"></i>
-          <input id="password2" name="password2" type="password" placeholder="Confirm password" autocomplete="new-password" required>
-          <label for="password2">Confirm password</label>
+          <i class="fa-solid fa-briefcase"></i>
+
+          <input
+            type="text"
+            id="role"
+            name="role"
+            placeholder="Role"
+            value="{{ form.role|default:'' }}"
+            required
+          >
+
+          <label for="role">Role</label>
         </div>
-        {% if errors.password2 %}<div class="field-error">{{ errors.password2 }}</div>{% endif %}
 
-        <button class="cta-button auth-submit-button" type="submit">
-          <i class="fa-solid fa-rocket"></i>
-          Register
-        </button>
-      </form>
+        {% if errors.role %}
+          <div class="field-error">
+            {{ errors.role }}
+          </div>
+        {% endif %}
+      </div>
 
-      <a href="{% url 'advisor:login' %}" class="toggle-link">Already have an account? Login</a>
-    </section>
+    </div>
+
+    <!-- PHONE + CLOUD -->
+
+    <div class="form-grid compact">
+
+      <div>
+        <div class="input-group">
+          <i class="fa-solid fa-phone"></i>
+
+          <input
+            type="text"
+            id="phone"
+            name="phone"
+            placeholder="Phone"
+            autocomplete="tel"
+            value="{{ form.phone|default:'' }}"
+            required
+          >
+
+          <label for="phone">Phone</label>
+        </div>
+
+        {% if errors.phone %}
+          <div class="field-error">
+            {{ errors.phone }}
+          </div>
+        {% endif %}
+      </div>
+
+      <div>
+
+        <div class="input-group select-group">
+          <i class="fa-solid fa-cloud"></i>
+
+          <select
+            id="cloud_provider"
+            name="cloud_provider"
+            required
+          >
+            <option value="" disabled selected hidden>Select provider</option>
+
+            <option
+              value="AWS"
+              {% if form.cloud_provider == 'AWS' %}
+                selected
+              {% endif %}
+            >
+              AWS
+            </option>
+
+          </select>
+
+          <label for="cloud_provider">
+            Cloud provider
+          </label>
+
+        </div>
+
+        {% if errors.cloud_provider %}
+          <div class="field-error">
+            {{ errors.cloud_provider }}
+          </div>
+        {% endif %}
+
+      </div>
+
+    </div>
+
+    <!-- BUDGET -->
+
+    <div class="input-group">
+      <i class="fa-solid fa-wallet"></i>
+
+      <input
+        type="number"
+        id="monthly_budget"
+        name="monthly_budget"
+        min="0"
+        step="0.01"
+        placeholder="Monthly AWS budget"
+        value="{{ form.monthly_budget|default:'' }}"
+      >
+
+      <label for="monthly_budget">
+        Monthly AWS budget
+      </label>
+    </div>
+
+    {% if errors.monthly_budget %}
+      <div class="field-error">
+        {{ errors.monthly_budget }}
+      </div>
+    {% endif %}
+
+    <!-- PASSWORD -->
+
+    <div class="input-group">
+      <i class="fa-solid fa-lock"></i>
+
+      <input
+        type="password"
+        id="password"
+        name="password"
+        placeholder="Password"
+        autocomplete="new-password"
+        required
+      >
+
+      <label for="password">Password</label>
+    </div>
+
+    {% if errors.password %}
+      <div class="field-error">
+        {{ errors.password }}
+      </div>
+    {% endif %}
+
+    <!-- CONFIRM PASSWORD -->
+
+    <div class="input-group">
+      <i class="fa-solid fa-shield-halved"></i>
+
+      <input
+        type="password"
+        id="password2"
+        name="password2"
+        placeholder="Confirm password"
+        autocomplete="new-password"
+        required
+      >
+
+      <label for="password2">
+        Confirm password
+      </label>
+    </div>
+
+    {% if errors.password2 %}
+      <div class="field-error">
+        {{ errors.password2 }}
+      </div>
+    {% endif %}
+
+    <!-- SUBMIT -->
+
+    <button class="cta-button auth-submit-button" type="submit">
+
+      <i class="fa-solid fa-rocket"></i>
+
+      Register
+
+    </button>
+
+  </form>
+
+  <a href="{% url 'advisor:login' %}" class="toggle-link">
+    Already have an account? Login
+  </a>
+
+</section>
+
+
   </main>
 
-  <script src="{% static 'advisor/js/neural-bg.js' %}?v=finops-ui-4"></script>
+  <script src="{% static 'advisor/js/neural-bg.js' %}?v=aws-finops-final"></script>
+
 </body>
 </html>

@@ -1,124 +1,286 @@
 {% load static %}
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Recommendations - CloudPulse AI</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&display=swap"
+
+  <meta charset="UTF-8">
+
+  <meta name="viewport"
+    content="width=device-width, initial-scale=1.0">
+
+  <title>
+    CloudPulse AI - Recommendations
+  </title>
+
+  <link rel="preconnect"
+    href="https://fonts.googleapis.com">
+
+  <link rel="preconnect"
+    href="https://fonts.gstatic.com"
+    crossorigin>
+
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap"
     rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-  <link rel="stylesheet" href="{% static 'advisor/css/styles.css' %}?v=finops-ui-4">
+
+  <link rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+  <link rel="stylesheet"
+    href="{% static 'advisor/css/styles.css' %}?v=finops-rec-fixed">
+
 </head>
 
-<body class="app-body">
-  <canvas id="neural-bg" class="neural-bg" aria-hidden="true"></canvas>
+<body class="dashboard-body">
+
+  <canvas id="neural-bg"
+    class="neural-bg"></canvas>
 
   <div class="app-layout">
-    <aside class="sidebar" aria-label="CloudPulse navigation">
-      <a href="{% url 'advisor:dashboard' %}" class="logo">
-        <span class="logo-icon"><i class="fa-solid fa-bolt"></i></span>
+
+    <!-- SIDEBAR -->
+
+    <aside class="sidebar">
+
+      <a href="{% url 'advisor:dashboard' %}"
+        class="logo">
+
+        <span class="logo-icon">
+          <i class="fa-solid fa-bolt"></i>
+        </span>
+
         <span>CloudPulse AI</span>
+
       </a>
 
-      <nav class="sidebar-nav" aria-label="Dashboard navigation">
-        <a href="{% url 'advisor:dashboard' %}"><i class="fa-solid fa-gauge-high"></i> Dashboard</a>
-        <a href="{% url 'advisor:anomalies_list' %}"><i class="fa-solid fa-triangle-exclamation"></i> Anomalies</a>
-        <a href="{% url 'advisor:recommendations_list' %}" class="active"><i class="fa-solid fa-leaf"></i>
-          Recommendations</a>
-        <a href="{% url 'advisor:profile' %}"><i class="fa-solid fa-user-gear"></i> Profile</a>
+      <nav class="sidebar-nav">
+
+        <a href="{% url 'advisor:dashboard' %}">
+
+          <i class="fa-solid fa-gauge-high"></i>
+
+          Dashboard
+
+        </a>
+
+        <a href="{% url 'advisor:anomalies_list' %}">
+
+          <i class="fa-solid fa-triangle-exclamation"></i>
+
+          Anomalies
+
+        </a>
+
+        <a href="{% url 'advisor:recommendations_list' %}"
+          class="active">
+
+          <i class="fa-solid fa-lightbulb"></i>
+
+          Recommendations
+
+        </a>
+
+        <a href="{% url 'advisor:profile' %}">
+
+          <i class="fa-solid fa-user"></i>
+
+          Profile
+
+        </a>
+
       </nav>
 
-      <div class="sidebar-footer">
-        <div class="user-mini">
-          <i class="fa-solid fa-circle-user"></i>
-          <div>
-            <strong>{{ request.user.username }}</strong>
-            <span>{{ request.user.email|default:"FinOps operator" }}</span>
-          </div>
-        </div>
-        <a href="{% url 'advisor:logout' %}" class="nav-user-button"><i
-            class="fa-solid fa-arrow-right-from-bracket"></i> Logout</a>
-      </div>
     </aside>
 
-    <main class="app-main">
-      <section class="page-header">
-        <div style="display: flex; align-items: center; gap: 20px;">
-          <button id="sidebar-toggle" class="neon-button" aria-label="Toggle Sidebar" style="padding: 10px 14px;">
-            <i class="fa-solid fa-bars"></i>
-          </button>
-          <div>
-            <!-- <span class="eyebrow"><i class="fa-solid fa-leaf"></i> Savings</span> -->
-            <h1>Recommendations</h1>
-          </div>
-        </div>
-        <span class="neon-button">{{ recs|length }} items</span>
-      </section>
+    <!-- MAIN -->
 
-      <section class="tile-grid" aria-label="Recommendation highlights">
+    <main class="dashboard-main">
+
+      <!-- HEADER -->
+
+      <header class="topbar">
+
+        <div>
+
+          <h1>Recommendations</h1>
+
+          <p>
+            AI-generated AWS cost optimization
+            opportunities and projected savings.
+          </p>
+
+        </div>
+
+        <div class="topbar-actions">
+
+          <span class="live-dot">
+
+            {{ recs|length }} items
+
+          </span>
+
+        </div>
+
+      </header>
+
+      <!-- TOP CARDS -->
+
+      <section class="summary-cards">
+
         {% for r in recs|slice:":3" %}
-        <article class="tile success">
-          <div class="tile-kicker">
-            <span class="service-tag">{{ r.service }}</span>
-            <span class="savings-value">{{ r.savings_text }}</span>
+
+        <article class="stat-card success">
+
+          <div class="metric-row">
+
+            <span class="service-pill">
+
+              {{ r.service }}
+
+            </span>
+
+            <span class="metric-icon">
+
+              <i class="fa-solid fa-leaf"></i>
+
+            </span>
+
           </div>
-          <h3>{{ r.title }}</h3>
+
+          <div class="recommendation-title">
+
+            {{ r.title }}
+
+          </div>
+
+          <div class="recommendation-saving">
+
+            Estimated savings:
+            <strong>
+              ${{ r.savings_value|floatformat:2 }}
+            </strong>
+
+          </div>
+
         </article>
-        {% empty %}
-        <article class="tile">
-          <h3>No recommendations</h3>
-          <p>The queue is empty.</p>
-        </article>
+
         {% endfor %}
+
       </section>
 
-      <section class="data-panel">
+      <!-- SAVINGS TABLE -->
+
+      <section class="data-panel"
+        style="margin-top:20px;">
+
         <div class="panel-header">
-          <h2><i class="fa-solid fa-coins"></i> Savings ledger</h2>
+
+          <h3>
+
+            <i class="fa-solid fa-coins"></i>
+
+            Savings ledger
+
+          </h3>
+
         </div>
-        <div class="table-shell">
-          <table>
+
+        <div class="table-wrap">
+
+          <table class="ledger-table">
+
             <thead>
+
               <tr>
-                <th>Recommendation</th>
-                <th>Service</th>
-                <th>Estimated savings</th>
+
+                <th>
+                  Recommendation
+                </th>
+
+                <th>
+                  Service
+                </th>
+
+                <th>
+                  Estimated Savings
+                </th>
+
               </tr>
+
             </thead>
+
             <tbody>
+
               {% for r in recs %}
+
               <tr>
-                <td>{{ r.title }}</td>
-                <td><span class="service-tag">{{ r.service }}</span></td>
-                <td><span class="savings-value">{{ r.savings_text }}</span></td>
+
+                <td>
+
+                  <div class="ledger-title">
+
+                    {{ r.title }}
+
+                  </div>
+
+                  <div class="ledger-description">
+
+                    {{ r.description }}
+
+                  </div>
+
+                </td>
+
+                <td>
+
+                  <span class="service-pill">
+
+                    {{ r.service }}
+
+                  </span>
+
+                </td>
+
+                <td>
+
+                  <span class="savings-pill">
+
+                    ${{ r.savings_value|floatformat:2 }}
+
+                  </span>
+
+                </td>
+
               </tr>
+
               {% empty %}
+
               <tr>
-                <td colspan="3" class="empty-state">No recommendations</td>
+
+                <td colspan="3"
+                  style="text-align:center;padding:40px;">
+
+                  No recommendations available
+
+                </td>
+
               </tr>
+
               {% endfor %}
+
             </tbody>
+
           </table>
+
         </div>
+
       </section>
+
     </main>
+
   </div>
 
-  <script src="{% static 'advisor/js/neural-bg.js' %}?v=finops-ui-4"></script>
-  <script>
-    document.addEventListener("DOMContentLoaded", () => {
-      const toggleBtn = document.getElementById("sidebar-toggle");
-      if (toggleBtn) {
-        toggleBtn.addEventListener("click", () => {
-          document.querySelector(".app-layout").classList.toggle("sidebar-hidden");
-        });
-      }
-    });
-  </script>
-</body>
+  <script src="{% static 'advisor/js/neural-bg.js' %}"></script>
 
+</body>
 </html>
