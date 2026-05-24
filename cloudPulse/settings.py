@@ -17,9 +17,13 @@ SECRET_KEY = os.getenv(
 "django-insecure-cloudpulse-dev-key"
 )
 
-DEBUG = True
+DEBUG = os.getenv("DEBUG", "False") == "True"
 
-ALLOWED_HOSTS = ["*"]
+ALLOWED_HOSTS = [
+    ".onrender.com",
+    "localhost",
+    "127.0.0.1",
+]
 
 # Installed apps
 
@@ -151,3 +155,7 @@ DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
 SESSION_COOKIE_AGE = 86400
 SESSION_SAVE_EVERY_REQUEST = True
+
+STATICFILES_STORAGE = (
+    "django.contrib.staticfiles.storage.StaticFilesStorage"
+)
