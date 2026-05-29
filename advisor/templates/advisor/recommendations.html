@@ -90,6 +90,19 @@
 
       </nav>
 
+      <div class="sidebar-footer">
+        <div class="user-mini">
+          <i class="fa-solid fa-circle-user"></i>
+          <div>
+            <strong>{{ request.user.username }}</strong>
+            <span>{{ request.user.email|default:"FinOps operator" }}</span>
+          </div>
+        </div>
+        <a href="{% url 'advisor:logout' %}" class="nav-user-button">
+          <i class="fa-solid fa-arrow-right-from-bracket"></i> Logout
+        </a>
+      </div>
+
     </aside>
 
     <!-- MAIN -->
@@ -100,15 +113,17 @@
 
       <header class="topbar">
 
-        <div>
-
-          <h1>Recommendations</h1>
-
-          <p>
-            AI-generated AWS cost optimization
-            opportunities and projected savings.
-          </p>
-
+        <div style="display: flex; gap: 20px; align-items: flex-start;">
+          <button id="sidebar-toggle" class="neon-button" aria-label="Toggle Sidebar" style="padding: 10px 14px; margin-top: 5px;">
+            <i class="fa-solid fa-bars"></i>
+          </button>
+          <div>
+            <h1>Recommendations</h1>
+            <p>
+              AI-generated AWS cost optimization
+              opportunities and projected savings.
+            </p>
+          </div>
         </div>
 
         <div class="topbar-actions">
@@ -281,6 +296,15 @@
   </div>
 
   <script src="{% static 'advisor/js/neural-bg.js' %}"></script>
-
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const toggleBtn = document.getElementById("sidebar-toggle");
+      if (toggleBtn) {
+        toggleBtn.addEventListener("click", () => {
+          document.querySelector(".app-layout").classList.toggle("sidebar-hidden");
+        });
+      }
+    });
+  </script>
 </body>
 </html>

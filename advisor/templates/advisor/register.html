@@ -145,6 +145,8 @@
         autocomplete="email"
         value="{{ form.email|default:'' }}"
         required
+        pattern="[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}"
+        title="Please enter a valid email address."
       >
 
       <label for="email">Email</label>
@@ -224,6 +226,8 @@
             autocomplete="tel"
             value="{{ form.phone|default:'' }}"
             required
+            pattern="^\+?[0-9\s\-()]{10,15}$"
+            title="Please enter a valid phone number (10-15 digits)."
           >
 
           <label for="phone">Phone</label>
@@ -303,7 +307,7 @@
 
     <!-- PASSWORD -->
 
-    <div class="input-group">
+    <div class="input-group" style="position: relative;">
       <i class="fa-solid fa-lock"></i>
 
       <input
@@ -316,6 +320,9 @@
       >
 
       <label for="password">Password</label>
+      <span class="password-toggle" onclick="togglePassword('password', this)" style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); cursor: pointer; color: inherit; z-index: 10;">
+        <i class="fa-solid fa-eye"></i>
+      </span>
     </div>
 
     {% if errors.password %}
@@ -326,7 +333,7 @@
 
     <!-- CONFIRM PASSWORD -->
 
-    <div class="input-group">
+    <div class="input-group" style="position: relative;">
       <i class="fa-solid fa-shield-halved"></i>
 
       <input
@@ -341,6 +348,9 @@
       <label for="password2">
         Confirm password
       </label>
+      <span class="password-toggle" onclick="togglePassword('password2', this)" style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); cursor: pointer; color: inherit; z-index: 10;">
+        <i class="fa-solid fa-eye"></i>
+      </span>
     </div>
 
     {% if errors.password2 %}
@@ -371,6 +381,20 @@
   </main>
 
   <script src="{% static 'advisor/js/neural-bg.js' %}?v=aws-finops-final"></script>
-
+  <script>
+    function togglePassword(inputId, iconSpan) {
+      const input = document.getElementById(inputId);
+      const icon = iconSpan.querySelector('i');
+      if (input.type === "password") {
+        input.type = "text";
+        icon.classList.remove('fa-eye');
+        icon.classList.add('fa-eye-slash');
+      } else {
+        input.type = "password";
+        icon.classList.remove('fa-eye-slash');
+        icon.classList.add('fa-eye');
+      }
+    }
+  </script>
 </body>
 </html>

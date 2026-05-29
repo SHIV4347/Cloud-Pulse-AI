@@ -99,22 +99,37 @@
 
       </nav>
 
+      <div class="sidebar-footer">
+        <div class="user-mini">
+          <i class="fa-solid fa-circle-user"></i>
+          <div>
+            <strong>{{ request.user.username }}</strong>
+            <span>{{ request.user.email|default:"FinOps operator" }}</span>
+          </div>
+        </div>
+        <a href="{% url 'advisor:logout' %}" class="nav-user-button">
+          <i class="fa-solid fa-arrow-right-from-bracket"></i> Logout
+        </a>
+      </div>
+
     </aside>
 
     <main class="dashboard-main">
 
       <header class="topbar">
 
-        <div>
-
-          <h1>FinOps Dashboard</h1>
-
-          <p>
-            AI-powered AWS telemetry,
-            anomaly detection,
-            and cost forecasting.
-          </p>
-
+        <div style="display: flex; gap: 20px; align-items: flex-start;">
+          <button id="sidebar-toggle" class="neon-button" aria-label="Toggle Sidebar" style="padding: 10px 14px; margin-top: 5px;">
+            <i class="fa-solid fa-bars"></i>
+          </button>
+          <div>
+            <h1>FinOps Dashboard</h1>
+            <p>
+              AI-powered AWS telemetry,
+              anomaly detection,
+              and cost forecasting.
+            </p>
+          </div>
         </div>
 
         <div class="topbar-actions">
@@ -577,6 +592,13 @@
     document.addEventListener(
       "DOMContentLoaded",
       () => {
+
+        const toggleBtn = document.getElementById("sidebar-toggle");
+        if (toggleBtn) {
+          toggleBtn.addEventListener("click", () => {
+            document.querySelector(".app-layout").classList.toggle("sidebar-hidden");
+          });
+        }
 
         initChart();
 

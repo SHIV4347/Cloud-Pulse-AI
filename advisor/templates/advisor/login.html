@@ -28,15 +28,18 @@
 
         <div class="input-group">
           <i class="fa-solid fa-envelope"></i>
-          <input id="email" name="email" type="email" placeholder="Email" autocomplete="email" value="{{ form.email|default:'' }}" required>
+          <input id="email" name="email" type="email" placeholder="Email" autocomplete="email" value="{{ form.email|default:'' }}" required pattern="[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}" title="Please enter a valid email address.">
           <label for="email">Email</label>
         </div>
         {% if errors.email %}<div class="field-error">{{ errors.email }}</div>{% endif %}
 
-        <div class="input-group">
+        <div class="input-group" style="position: relative;">
           <i class="fa-solid fa-lock"></i>
           <input id="password" name="password" type="password" placeholder="Password" autocomplete="current-password" required>
           <label for="password">Password</label>
+          <span class="password-toggle" onclick="togglePassword('password', this)" style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); cursor: pointer; color: inherit; z-index: 10;">
+            <i class="fa-solid fa-eye"></i>
+          </span>
         </div>
         {% if errors.password %}<div class="field-error">{{ errors.password }}</div>{% endif %}
 
@@ -54,5 +57,20 @@
   </main>
 
   <script src="{% static 'advisor/js/neural-bg.js' %}?v=finops-ui-4"></script>
+  <script>
+    function togglePassword(inputId, iconSpan) {
+      const input = document.getElementById(inputId);
+      const icon = iconSpan.querySelector('i');
+      if (input.type === "password") {
+        input.type = "text";
+        icon.classList.remove('fa-eye');
+        icon.classList.add('fa-eye-slash');
+      } else {
+        input.type = "password";
+        icon.classList.remove('fa-eye-slash');
+        icon.classList.add('fa-eye');
+      }
+    }
+  </script>
 </body>
 </html>
